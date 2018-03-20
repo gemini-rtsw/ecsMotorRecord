@@ -1,0 +1,27 @@
+2018 Matt Rippa RTEMS Migration Structure for ECS Control Record
+-----------------------------------------------------------------
+
+1. New Makefile for RTEMS: focus on the ECS Record support.
+   a.  DBDINC += ecsMotorRecord
+       ...<snip>...
+   b.  Find legacy ecsMotorRecord.dbd and import here to src.
+   c.  ecsCtrl_DBD += ecsMotorRecord.dbd
+       ...<snip>...
+   d.  ecsCtrl_SRCS += devEcsAbDf1.c
+       ecsCtrl_SRCS += ecsMotorRecord.c
+
+2. Separate out the AbDf1 guts from 'ecsMotor' DBD file.
+   This leaves the devEcsMotor.dbd with only one line for 
+   the device(ecsMotor,  ...) support. The remaining AbDf1
+   support comes from the external AbDf1 support module.
+   
+3. Attemp the compile process:
+   a. First need the #include to ois compliant. Done.
+   b. Modified the Debug macro to use osi calls.
+   c. ecsMotorRecord.c looks good.
+
+4. ECS Device support (based on Gemini common AbDf1)
+   a. devEcsAbDf1.c and .h should be refactored to use common AbDf1.
+   b. Gut the specific device implementations aiDevInitRecAbDf(), aoDevRead(), mbbiDevRead()...etc.
+   c. Keep routines inside devEcsAbDf1.c to be ecsMotor related only.
+   e. 
