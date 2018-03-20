@@ -1,0 +1,2 @@
+device( ecsMotor, INST_IO, devMoAbDf1,   "AB DF1 serial" )
+
