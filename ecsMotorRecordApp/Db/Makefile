@@ -6,6 +6,9 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Find any .sym files in the Db directory
 vpath %.sym ..
+vpath %-edb.def ..
+vpath %-tdct.cfg ..
+vpath %.db $(SYS_DB_PATHS)
 
 # Install database files created from .sch files
 # using TDCT (or just install .db files) into <top>/db.
@@ -21,7 +24,9 @@ DEPSCHS = $(wildcard ../*.sch)
 
 # If .sym files are in this support module,
 # simply install them into <top>/db.
- DB += $(wildcard ../*.sym)
+DB += $(wildcard ../*.sym)
+DB += $(wildcard ../*-edb.def)
+DB += $(wildcard ../*-tdct.cfg)
 
 
 include $(TOP)/configure/RULES
