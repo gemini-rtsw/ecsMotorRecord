@@ -18,7 +18,7 @@ LIBRARY_IOC += ecsMotorRecord
 
 # specify all source files to be compiled
 # including sequencer (.st) source files
-ecsMotorRecord_SRCS += recEcsMotor.c
+ecsMotorRecord_SRCS += ecsMotorRecord.c
 
 ecsMotorRecord_LIBS += $(EPICS_BASE_IOC_LIBS)
 
