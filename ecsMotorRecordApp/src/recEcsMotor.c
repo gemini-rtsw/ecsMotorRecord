@@ -52,9 +52,9 @@
 
 #include <menuCarstates.h>
 
-#include "choiceEcsMotor.h"
-#include "ecsMotorFields.h"
-#include "ecsMotor.h"
+#include "ecsMotorRecordChoice.h"
+#include "ecsMotorRecordFields.h"
+#include "ecsMotorRecordDefs.h"
 
 #define GEN_SIZE_OFFSET
 #include <ecsMotorRecord.h>
