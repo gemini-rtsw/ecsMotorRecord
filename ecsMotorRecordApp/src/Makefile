@@ -9,8 +9,10 @@ include $(TOP)/configure/CONFIG
 
 
 DBDINC += ecsMotorRecord
-DBD += ecsMotorRecord.dbd
+DBD += ecsMotorRecordApp.dbd   # Needed for TDCT
 
+ecsMotorRecordApp_DBD += base.dbd
+ecsMotorRecordApp_DBD += ecsMotorRecord.dbd
 
 LIBRARY_IOC += ecsMotorRecord
 

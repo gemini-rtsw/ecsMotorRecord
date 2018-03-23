@@ -48,16 +48,17 @@
 #include <ellLib.h>
 #include <epicsMutex.h>
 #include <epicsExport.h>
+#include <postfix.h>
 
 #include <menuCarstates.h>
-
-#define GEN_SIZE_OFFSET
-#include "ecsMotorRecord.h"
-#undef GEN_SIZE_OFFSET
 
 #include "choiceEcsMotor.h"
 #include "ecsMotorFields.h"
 #include "ecsMotor.h"
+
+#define GEN_SIZE_OFFSET
+#include <ecsMotorRecord.h>
+#undef GEN_SIZE_OFFSET
 
 /*** Debugging variables, macros ***/
 /*
