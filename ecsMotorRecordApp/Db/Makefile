@@ -22,6 +22,12 @@ DEPSCHS = $(wildcard ../*.sch)
 # correspond to a .sch file
 # DB += xxx.db
 
+
+TEMPLATES_DIR = schematics
+TEMPLATES += ecsMotorControl.sch ecsMotorControl.sym
+
+
+
 # If .sym files are in this support module,
 # simply install them into <top>/db.
 DB += $(wildcard ../*.sym)
@@ -32,4 +38,9 @@ DB += $(wildcard ../*-tdct.cfg)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+
+clean::myclean
+myclean:
+	$(RM) *.dat *.bak 
 

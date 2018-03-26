@@ -1,0 +1,90 @@
+[symbol2]
+bbox -283 -352 107 160
+port -248 160 100 1792 Position symbol 1 -280 144 0
+port -248 16 100 1792 Mode symbol 1 -280 0 0
+port -248 -32 100 1792 Tolerance symbol 1 -280 -48 0
+port -248 -80 100 1792 Fault symbol 1 -280 -96 0
+port -248 -128 100 1792 Simulation symbol 1 -280 -144 0
+port -248 -176 100 1792 Debug symbol 1 -280 -192 0
+port -248 -320 100 1792 Slink symbol 1 -280 -336 0
+port -248 112 100 1792 Handshake symbol 1 -280 96 0
+port -248 64 100 1792 Encoder symbol 1 -280 48 0
+port 88 160 100 1792 Response symbol 2 104 144 0
+port 88 112 100 1792 HandshakeStatus symbol 2 104 96 0
+port 88 64 100 1792 Message symbol 2 104 48 0
+port 88 -80 100 1792 DevPosn symbol 2 104 -96 0
+port 88 -128 100 1792 InPosn symbol 2 104 -144 0
+port 88 -176 100 1792 Status symbol 2 104 -192 0
+port 88 -224 100 1792 ULimit symbol 2 104 -240 0
+port 88 -272 100 1792 LLimit symbol 2 104 -288 0
+port 88 -320 100 1792 Flink symbol 2 104 -336 0
+port 88 16 100 1792 PositionDemand symbol 2 104 0 0
+port 88 -32 100 1792 VelocityDemand symbol 2 104 -48 0
+uniq 27
+[tools]
+[attributes]
+[layers]
+<symbol>
+l 100 0 0 -176 -328 ECS Motor Control
+r 0 -184 -352 8 160
+v 0 -184 144
+-280 144
+_
+v 0 -184 0
+-280 0
+_
+v 0 -184 -48
+-280 -48
+_
+v 0 -184 -96
+-280 -96
+_
+v 0 -184 -144
+-280 -144
+_
+v 0 -184 -192
+-280 -192
+_
+v 0 -184 -336
+-280 -336
+_
+v 0 -184 96
+-280 96
+_
+v 0 -184 48
+-280 48
+_
+v 0 8 144
+104 144
+_
+v 0 8 96
+104 96
+_
+v 0 8 48
+104 48
+_
+v 0 8 -96
+104 -96
+_
+v 0 8 -144
+104 -144
+_
+v 0 8 -192
+104 -192
+_
+v 0 8 -240
+104 -240
+_
+v 0 8 -288
+104 -288
+_
+v 0 8 -336
+104 -336
+_
+v 0 8 0
+104 0
+_
+v 0 8 -48
+104 -48
+_
+[comments]
