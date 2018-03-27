@@ -14,7 +14,7 @@ w 808 2867 100 0 n#9 inhier.Simulation.P 544 2864 1072 2864 1072 3128 1184 3128 
 w 824 2803 100 0 n#10 inhier.Debug.P 544 2800 1104 2800 1104 3096 1184 3096 eecsmotor.motor.DBGL
 w 840 2739 100 0 n#11 inhier.Slink.P 544 2736 1136 2736 1136 3032 1184 3032 eecsmotor.motor.SLNK
 w 832 3507 100 0 n#12 inhier.Mode.P 528 3504 1136 3504 1136 3352 1184 3352 eecsmotor.motor.MODE
-w 816 3443 100 0 n#13 inhier.VAL.P 528 3440 1104 3440 1104 3320 1184 3320 eecsmotor.motor.VAL
+w 816 3443 100 0 n#13 inhier.Position.P 528 3440 1104 3440 1104 3320 1184 3320 eecsmotor.motor.VAL
 w 808 3379 100 0 n#14 inhier.Tolerance.P 528 3376 1088 3376 1088 3288 1184 3288 eecsmotor.motor.MDBD
 w 1616 3323 100 0 n#15 eecsmotor.motor.MSGL 1504 3320 1728 3320 1728 3376 2368 3376 outhier.Message.p
 w 1672 3291 100 0 n#16 elongouts.elongouts#8.DOL 1840 3288 1504 3288 eecsmotor.motor.HSTA
@@ -112,7 +112,7 @@ use eaos 640 3008 100 0 eaos#44
 xform 0 768 3072
 p 844 3014 100 0 1 OMSL:closed_loop
 p 687 2986 100 1024 1 name:$(top)$(dev)Aoenc
-use inhier 375 3432 100 0 VAL
+use inhier 375 3432 100 0 Position
 xform 0 528 3440
 use eecsmotor 1184 2992 100 0 motor
 xform 0 1344 3200

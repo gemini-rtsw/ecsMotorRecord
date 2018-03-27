@@ -16,7 +16,7 @@ vpath %.db $(SYS_DB_PATHS)
 #TDCT_CFG = ../tdct.cfg
 
 # Make depends on all .sch files
-DEPSCHS = $(wildcard ../*.sch)
+#DEPSCHS = $(wildcard ../*.sch)
 
 # Add target .db files below here. Each must
 # correspond to a .sch file
@@ -34,10 +34,15 @@ DB += $(wildcard ../*.sym)
 DB += $(wildcard ../*-edb.def)
 DB += $(wildcard ../*-tdct.cfg)
 
+DB += ecsMotorControl.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+$(COMMON_DIR)/%.db: %.db
+	cp $< $@
+
 
 
 clean::myclean
