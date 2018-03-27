@@ -1,0 +1,16 @@
+March 27th, 2018 tgagg
+1. RELEASE.NOTES file is created
+2. M ecsMotorRecordApp/Db/ecsMotorControl.sch  
+   + Added $(dev) macro to all symbols
+   + Added frame 
+   + handshake input name changed from: handshake to hskinp to be consistent
+      with handshake output (status) called hskstat
+   + Added counter (using calc) for each processing
+   + Connected cascade FLNK for outputs
+   + Inserted ao records between longin and ecsMoRec so links are properly
+      connected to vals.
+3. M configure/CONFIG_SITE
+ As we are using it as SoftIOC right now, exclude other architectures to get
+  faster compilation times.
+
+----
