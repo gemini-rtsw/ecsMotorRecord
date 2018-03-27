@@ -75,8 +75,6 @@
 
 static ELLLIST         ecsMotorRecordScanList;
 static epicsThreadId   ecsMotorRecordTaskId;
-static long            commErrCount;
-static epicsTimeStamp  commErrTime;
 
 static const char * const tsfmt = "%Y-%m-%d %H:%M:%S.%09f";
 #define Debug(l,FMT,V) if (l <= pmr->dbug)                               \
