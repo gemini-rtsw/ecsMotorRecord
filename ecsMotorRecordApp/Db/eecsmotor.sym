@@ -1,5 +1,5 @@
 [symbol2]
-bbox -104 64 227 449
+bbox -104 40 227 456
 port 191 121 100 1792 LLS symbol 2 224 112 0
 port 191 153 100 1792 HLS symbol 2 224 144 0
 port -57 153 100 1792 DBGL symbol 1 -96 144 0
@@ -24,7 +24,7 @@ uniq 27
 [tools]
 [attributes]
 p 20 248 100 0 0 DBUG:NONE
-p -25 425 100 0 1 DESC:ecsMotor record
+p -25 425 100 0 -1 DESC:ecsMotor record
 p 8 166 100 0 0 DISS:NO_ALARM
 p 8 134 100 0 0 DISV:1
 p 80 240 100 0 0 EGU:mm
@@ -63,7 +63,7 @@ p -96 286 100 0 0 def(FLNK):0.000000000000000e+00
 p -72 180 100 0 0 def(OUT):0.000000000000e+00
 p -96 356 100 0 0 def(SDIS):0.000000000000000e+00
 p -88 268 100 0 0 def(SIML):0.0000000000000e+00
-p 16 128 100 1024 0 name:$(top)$(I)
+p -32 40 100 1024 1 name:$(top)$(dev)
 p -40 308 100 0 0 palrm(DBGL):NMS
 p -40 372 100 0 0 palrm(DOL):NMS
 p -48 228 100 0 0 palrm(DSTL):NMS
