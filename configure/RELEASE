@@ -32,7 +32,7 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # If using the sequencer, point SNCSEQ at its top directory:
 #SNCSEQ = $(MODULES)/seq-ver
-GEMREC = $(WORK_SUPP)/geminiRec
+GEMREC=/gem_sw/prod/R3.14.12.7/support/geminiRec/4-1-6
 
 # EPICS_BASE should appear last so earlier modules can override stuff:
 EPICS_BASE = /gem_sw/epics/$(EPICS_RELEASE)/base

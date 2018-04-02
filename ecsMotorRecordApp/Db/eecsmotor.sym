@@ -76,7 +76,7 @@ p 32 148 100 0 0 pproc(DSTL):NPP
 p 52 128 100 0 0 pproc(MSGL):NPP
 p -40 308 100 0 0 pproc(SDIS):NPP
 p -28 184 100 1 0 pproc(SIML):NPP
-p -64 402 100 0 0 primitive:eecsmotors
+p -64 402 100 0 0 primitive:ecsmotor
 p -20 288 100 0 0 typ(DBGL):path
 p 8 276 100 0 0 typ(DOL):path
 p -8 164 100 0 0 typ(DSTL):path

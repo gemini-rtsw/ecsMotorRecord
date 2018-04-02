@@ -30,11 +30,12 @@ TEMPLATES += ecsMotorControl.sch ecsMotorControl.sym
 
 # If .sym files are in this support module,
 # simply install them into <top>/db.
-DB += $(wildcard ../*.sym)
+#DB += $(wildcard ../*.sym)
+DB += ../eecsmotor.sym
 DB += $(wildcard ../*-edb.def)
 DB += $(wildcard ../*-tdct.cfg)
+vpath %.db $(SYS_DB_PATHS)
 
-DB += ecsMotorControl.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------
