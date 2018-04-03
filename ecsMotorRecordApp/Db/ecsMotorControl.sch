@@ -1,5 +1,5 @@
 [schematic2]
-uniq 34
+uniq 35
 [tools]
 [detail]
 w 140 3091 100 0 n#1 inhier.Encoder.P 88 3088 192 3088 elongins.elongins#7.INP
@@ -35,6 +35,7 @@ w 1524 3059 100 0 n#30 eecsmotor.eecsmotor#45.HLS 1464 3056 1584 3056 1584 2464 
 w 1508 3027 100 0 n#31 eecsmotor.eecsmotor#45.LLS 1464 3024 1552 3024 1552 2384 2368 2384 outhier.LLimit.p
 w 1492 2997 -100 0 n#32 eecsmotor.eecsmotor#45.FLNK 1464 2992 1520 2992 1520 2304 2368 2304 outhier.Flink.p
 w 538 3378 -100 0 n#33 inhier.Tolerance.P 528 3376 1080 3376 1080 3248 1144 3248 eecsmotor.eecsmotor#45.MDBD
+w 1540 3253 -100 0 n#34 eecsmotor.eecsmotor#45.HSTA 1464 3248 1744 3248 1744 3288 1840 3288 elongouts.elongouts#8.DOL
 [cell use]
 use bc200tr -424 1560 100 0 bc200tr#39
 xform 0 1256 2840
