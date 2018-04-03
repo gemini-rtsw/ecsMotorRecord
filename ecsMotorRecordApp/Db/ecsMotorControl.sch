@@ -116,6 +116,7 @@ use inhier 375 3432 100 0 Position
 xform 0 528 3440
 use eecsmotor 1144 2952 100 0 eecsmotor#45
 xform 0 1304 3160
+p 1211 2952 100 1024 1 name:$(top)$(dev)motor
 use outhier 2412 2296 100 0 Flink
 xform 0 2352 2304
 [comments]
