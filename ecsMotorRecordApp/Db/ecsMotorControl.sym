@@ -1,5 +1,5 @@
 [symbol2]
-bbox -275 -451 115 176
+bbox -275 -368 115 176
 port -240 144 100 1792 Position symbol 1 -272 128 0
 port -240 0 100 1792 Mode symbol 1 -272 -16 0
 port -240 -48 100 1792 Tolerance symbol 1 -272 -64 0
@@ -23,9 +23,10 @@ port 96 -48 100 1792 VelocityDemand symbol 2 112 -64 0
 uniq 27
 [tools]
 [attributes]
-p -165 -398 100 0 -1 set0:top $(top)
-p -165 -422 100 0 -1 set1:dev TBC
-p -168 -451 100 0 -1 set2:dtyp TYPE
+p -165 74 100 0 -1 set0:top $(top)
+p -165 34 100 0 -1 set1:dev dev
+p -168 -11 100 0 -1 set2:dtyp dtyp
+p -159 -52 100 0 -1 set3:vms 0
 [layers]
 <symbol>
 l 100 0 0 -160 144 ECS Motor Control
