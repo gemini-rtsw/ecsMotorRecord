@@ -232,7 +232,7 @@ static void ecsMotorRecordScanTask(void *p) {
       while (pPriv) {
          pmr = (struct ecsMotorRecord *) pPriv->pmr;
          pRset = (struct rset *) pmr->rset;
-         Debug(DBUG_MAX, "<%s> %s:--- scanTask:entry -----------------------------%c\n", ' ');
+         Debug(DBUG_MAX, "<%s> %s:=== scanTask:entry (%s) ===========\n", pmr->name);
 
          /* adjust the timeout timer */
          if (pPriv->timeoutActive) {
@@ -319,6 +319,7 @@ pPriv->callbackFlags = 1;
                }
          }
          pPriv = (ecsMotorRecordPriv  *) ellNext (&pPriv->node);
+	 Debug(DBUG_FULL, "<%s> %s:Scan Task .. end of record loop:%c\n", ' ');
       }
       /* PGX: TESTING - RESTORE: slowed down scan rate
        * epicsThreadSleep(1.0/ECS_SCAN_RATE);
@@ -333,7 +334,6 @@ pPriv->callbackFlags = 1;
  * Start or adjust the process timeout counter.
  *
  */
-
 static long
 setTimeout (struct ecsMotorRecord *pmr, long time) {
     ecsMotorRecordPriv *pPriv = pmr->dpvt;
@@ -354,8 +354,6 @@ setTimeout (struct ecsMotorRecord *pmr, long time) {
 
     return status;
 }
-
-
 
 /*
  * Function recordError 
@@ -392,14 +390,12 @@ static long recordError (struct ecsMotorRecord *pmr, char *msg, long status) {
   return status;
 }
 
-
 /*
  * Function ecsMotorRecordPocessType
  * 
  * Determine what caused the record to be processed
  * (This had been part of the ABDF1 device support)
  */
-
 static long ecsMotorRecordProcessType(struct ecsMotorRecord *pmr) {
    ecsMotorRecordPriv *pPriv = pmr->dpvt;
 
@@ -491,7 +487,6 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
     return status;
 }
 
-
 /*
  * Function writeHandshake
  * 
@@ -519,7 +514,6 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
    }
    return (status);
 }
-
 
 /*
  * Function checkFaultState
@@ -604,9 +598,6 @@ static long checkFaultState (struct ecsMotorRecord *pmr) {
      return status;
 }
 
-
-
-
 /*
  * Function idleState
  * 
@@ -614,7 +605,6 @@ static long checkFaultState (struct ecsMotorRecord *pmr) {
  * has been accepted.   If the device is not already moving start it
  * now.
  */
-
 static long idleState (struct ecsMotorRecord *pmr) {
    long status = S_ECS_OK;
 
@@ -646,7 +636,6 @@ static long idleState (struct ecsMotorRecord *pmr) {
    return (status);
 }
 
-
 /*
  * Function poweringState
  * 
@@ -657,7 +646,6 @@ static long idleState (struct ecsMotorRecord *pmr) {
  * error is generated.   Note that this function is called
  * many times during this process.
  */
-
 static long poweringState (struct ecsMotorRecord *pmr) {
    ecsMotorRecordPriv *pPriv = pmr->dpvt;
    long status = S_ECS_OK;
@@ -695,7 +683,6 @@ static long poweringState (struct ecsMotorRecord *pmr) {
    return (status);
 }
 
-
 /*
  * Function writingState
  * 
@@ -704,7 +691,6 @@ static long poweringState (struct ecsMotorRecord *pmr) {
  * set the position or velocity valid bit.   This function is called
  * more than once in this process.
  */
-
 static long
 writingState (struct ecsMotorRecord *pmr) {
     //ecsMotorRecordPriv *pPriv = pmr->dpvt;
@@ -801,8 +787,6 @@ writingState (struct ecsMotorRecord *pmr) {
     return (status);
 }
 
-
-
 /*
  * Function verifyingState
  * 
@@ -811,7 +795,6 @@ writingState (struct ecsMotorRecord *pmr) {
  * If this is not received within the allowed time it is assumed that
  * the position was not accepted and the write is aborted.
  */
-
 static long
 verifyingState (struct ecsMotorRecord *pmr) {
     ecsMotorRecordPriv *pPriv = pmr->dpvt;
@@ -851,9 +834,6 @@ verifyingState (struct ecsMotorRecord *pmr) {
     return (status);
 }
 
-
-
-
 /*
  * Function startingState
  * 
@@ -861,7 +841,6 @@ verifyingState (struct ecsMotorRecord *pmr) {
  * has been accepted.   If the device is not already moving start it
  * now.
  */
-
 static long
 startingState (struct ecsMotorRecord *pmr) {
     long status = S_ECS_OK;
@@ -902,14 +881,12 @@ startingState (struct ecsMotorRecord *pmr) {
     return (status);
 }
 
-
 /*
  * Function movingState
  * 
  * A move has been sucessfully started.   Keep an eye on the
  * power, enable and inPosition bits.
  */
-
 static long
 movingState (struct ecsMotorRecord *pmr) {
     long status = S_ECS_OK;
@@ -948,15 +925,12 @@ movingState (struct ecsMotorRecord *pmr) {
     return status;
 }
 
-
-
 /*
  * Function stoppingState
  * 
  * A STOP request has been received.  Terminate the motion in 
  * progress.   Set the value field to the current position. 
   */
-
 static long
 stoppingState (struct ecsMotorRecord *pmr) {
     ecsMotorRecordPriv *pPriv = pmr->dpvt;
@@ -1033,13 +1007,11 @@ stoppingState (struct ecsMotorRecord *pmr) {
     return (status);
 }
 
-
 /*
  * Function depoweringState
  * 
  * A power-down request has been recived.  Shut off drive power.
  */
-
 static long
 depoweringState (struct ecsMotorRecord *pmr) {
     long status = S_ECS_OK;
@@ -1090,9 +1062,6 @@ depoweringState (struct ecsMotorRecord *pmr) {
     pmr->pp = TRUE;
     return status;
 }
-
-
-
 
 /*
  * Function failingState
@@ -1386,7 +1355,6 @@ pmr->dbug = DBUG_MAX;
    return (0);
 }
 
-
 /*
  * Function processSimulation
  * 
@@ -1632,7 +1600,6 @@ processSimulation (struct ecsMotorRecord *pmr, long processType) {
   return TRUE;
 }
 
-
 /******************************************************************************
    process()
 
@@ -1757,7 +1724,6 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
 {
     ecsMotorRecordPriv *pPriv = pmr->dpvt;
     long status = S_ECS_OK;
-    long defer = FALSE;
     long limval;
 
    Debug(DBUG_FULL, "<%s> %s:auxiliary_process:entry%c\n", ' ');
@@ -1877,7 +1843,6 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
    return status;
 }
 
-
 /******************************************************************************
    special()
 *******************************************************************************/
@@ -1891,7 +1856,6 @@ static long special(struct dbAddr *paddr, int after) {
 
    return (0);
 }
-
 
 /******************************************************************************
    get_value()
@@ -1981,7 +1945,6 @@ get_precision(struct dbAddr * paddr, long *precision)
    return (0);
 }
 
-
 /******************************************************************************
    get_alarm_double()
 *******************************************************************************/
@@ -2004,7 +1967,6 @@ get_alarm_double(struct dbAddr * paddr, struct dbr_alDouble * pad)
 
    return (0);
 }
-
 
 /******************************************************************************
    alarm()
@@ -2040,7 +2002,6 @@ emrAlarm(struct ecsMotorRecord * pmr) {
 
    return;
 }
-
 
 /******************************************************************************
    monitor()
@@ -2080,7 +2041,6 @@ monitor(struct ecsMotorRecord * pmr)
    post_MARKed_fields (pmr, DBE_VALUE);
    return;
 }
-
 
 /******************************************************************************
    post_MARKed_fields()
@@ -2277,7 +2237,6 @@ initLinks (struct ecsMotorRecord * pmr) {
    return status;
 }
 
-
 /******************************************************************************
    readInputLinks()
 *******************************************************************************/
@@ -2352,9 +2311,6 @@ readInputLinks (struct ecsMotorRecord * pmr) {
    return status;
 }
 
-
-
-
 /*********************************************************************
 
   original change notes from devEcsAbDf1.c placed here for reference
@@ -2390,4 +2346,3 @@ readInputLinks (struct ecsMotorRecord * pmr) {
 
 
 ***********************************************************************/
-
