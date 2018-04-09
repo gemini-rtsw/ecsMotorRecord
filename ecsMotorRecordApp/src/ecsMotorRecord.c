@@ -99,6 +99,7 @@ static void     monitor(struct ecsMotorRecord * pmr);
 static void     post_MARKed_fields(struct ecsMotorRecord * pmr, unsigned short mask);
 static long     initLinks(struct ecsMotorRecord * pmr);
 static long     readInputLinks(struct ecsMotorRecord * pmr);
+static long	auxiliary_process(struct ecsMotorRecord *pmr, long processType);
 
 /*** Record Support Entry Table (RSET) functions. ***/
 
@@ -157,7 +158,6 @@ struct ecsMotorDset {
 };
 #endif
 
-
 /*
 * Internal control structure for ecsMotorRecord support. 
 * This holds pointers to the current state of the system control variables.
@@ -194,8 +194,6 @@ typedef struct {
     short        timeoutActive;         /* timeout flag */
     long         timeoutTimer;          /* timeout tick counter */
     } ecsMotorRecordPriv;
-
-
 
 /* state machine forward declarations */
 static long idleState (struct ecsMotorRecord *);
@@ -234,7 +232,7 @@ static void ecsMotorRecordScanTask(void *p) {
       while (pPriv) {
          pmr = (struct ecsMotorRecord *) pPriv->pmr;
          pRset = (struct rset *) pmr->rset;
-         Debug(DBUG_MAX, "<%s> %s:scanTask:entry%c\n", ' ');
+         Debug(DBUG_MAX, "<%s> %s:--- scanTask:entry -----------------------------%c\n", ' ');
 
          /* adjust the timeout timer */
          if (pPriv->timeoutActive) {
@@ -279,6 +277,7 @@ static void ecsMotorRecordScanTask(void *p) {
                if (pPriv->callbackFlags & TIMEOUT_OVER) MARK(M_TIMEOUT);
                if (pPriv->callbackFlags & DATA_ERROR) MARK(M_ERROR);
                if (pmr->hsta != pPriv->handshake) {
+		    Debug(DBUG_MAX, "<%s> %s:setting hsta:%d\n", pPriv->handshake);
                     pmr->hsta = pPriv->handshake;
                     MARK(M_HSTA);
                }
@@ -402,13 +401,19 @@ static long ecsMotorRecordProcessType(struct ecsMotorRecord *pmr) {
 
 /* protect with private data mutex? (mdw) */
    /* Internal scan requests are detected here. */
-   if (MARKED(M_RESCAN)) return PROCESS_INTERNAL;
+   if (MARKED(M_RESCAN)) {
+       Debug(DBUG_MAX, "<%s> %s:ecsMotorRecordProcessType:internal%c\n", ' ');
+       return PROCESS_INTERNAL;
+   }
 
    /* "button" fields such as stop and fault are detected here */
-   if (pmr->stop ||
-      pmr->flt != pPriv->fault) return PROCESS_BUTTON;
+   if (pmr->stop || pmr->flt != pPriv->fault) {
+       Debug(DBUG_MAX, "<%s> %s:ecsMotorRecordProcessType:button%c\n", ' ');
+       return PROCESS_BUTTON;
+   }
 
     /* Otherwise it is a normal external procesing request */
+    Debug(DBUG_MAX, "<%s> %s:ecsMotorRecordProcessType:normal%c\n", ' ');
     return PROCESS_NORMAL;
 }
 
@@ -1110,12 +1115,6 @@ failingState (struct ecsMotorRecord *pmr) {
    return (status);
 }
 
-
-
-
-
-
-
 /*
  * Function processStateChange
  * 
@@ -1125,7 +1124,6 @@ failingState (struct ecsMotorRecord *pmr) {
  * state of the system. 
  * This is the primary control task for the sequencing system.
  */
-
 static long processStateChange (struct ecsMotorRecord *pmr) {
    long status = S_ECS_OK;
 
@@ -1182,10 +1180,6 @@ static long processStateChange (struct ecsMotorRecord *pmr) {
    return (status);
 }
 
-
-
-
-
 /*
  * Function processInitialize
  * 
@@ -1193,7 +1187,6 @@ static long processStateChange (struct ecsMotorRecord *pmr) {
  * and reinitialize internal information.   If the power is off
  * it will be turned on now.
  */
-
 static long processInitialize (struct ecsMotorRecord *pmr) {
    ecsMotorRecordPriv *pPriv = pmr->dpvt;
    long status = S_ECS_OK;
@@ -1223,8 +1216,6 @@ static long processInitialize (struct ecsMotorRecord *pmr) {
    status = idleState (pmr);
    return (status);
 }
-
-
 
 /******************************************************************************
    init_record()
@@ -1630,8 +1621,258 @@ processSimulation (struct ecsMotorRecord *pmr, long processType) {
 }
 
 
+/******************************************************************************
+   process()
+
+Called for the following reasons:
+
+1) Someone poked our .proc field, or some other field that is marked
+'process-passive' in the motorRecord.ascii file.  In this case, we
+read the input links and dive directly into device support.
+
+2) Device support triggered an asynchronous callback.   This is done so that
+the fields changed during device processing are posted as they change.   Input
+links are not read during callback processing. 
+
+3) A change in the fault status was detected.   This is treated like 
+a callback in that it was not directly requested by the operator.
+*******************************************************************************/
+static long process(struct ecsMotorRecord * pmr)
+{
+   // struct ecsMotorDset *pdset = (struct ecsMotorDset *) (pmr->dset);
+   
+   long recordProcessType;
+   long status, nRequest=1;
+
+   if (pmr->pact)
+      return (0);
+
+   Debug(DBUG_MAX, "<%s> %s:process begin%c\n", ' ');
+   pmr->pact = TRUE;
+
+   /* 
+    * Ask the device support to determine wether or not this
+    * processing was a result of an operator request i.e. mode
+    * change.   If so it will be necessary to mark the record as
+    * busy and read all of the input links before processing.
+    */
+   // recordProcessType = (*pdset->processType) (pmr);
+   recordProcessType = ecsMotorRecordProcessType(pmr);
+
+   if (recordProcessType == PROCESS_NORMAL) {
+     Debug(DBUG_MAX, "<%s> %s:process external process request%c\n", ' ');
+
+     /* Clear the last error and indicate that the record is busy */
+     pmr->mess[0] = '\0';
+     MARK(M_MESS);
+     pmr->dsta = menuCarstatesBUSY;
+     MARK(M_DSTA);
+
+     /* Check input links for new operating conditions */
+     status = readInputLinks (pmr);
+     if (status) {
+	 Debug(DBUG_MAX, "<%s> %s:exiting after readInputs%c\n", ' ');
+	 pmr->pact = FALSE;	/* PGX: added to prevent a deadlock */
+	 return (status);
+     }
+   }
+
+   /*
+    * Now call what it used to be the device support process routine.
+    * It was left as a separate routine because it has several return
+    * calls that would break the logic if we insert the code here (PGX).
+    */
+   Debug(DBUG_MAX, "<%s> %s:invoke device processing%c\n", ' ');
+   status = auxiliary_process(pmr, recordProcessType);
+   if (status) {
+     pmr->dsta = menuCarstatesERROR;
+     pmr->pp = TRUE;
+   }
+
+   Debug(DBUG_MAX, "<%s> %s:auxiliary processing return %ld\n", status);
+
+   /* if Post Process request perform epics completion tasks */
+   if (pmr->pp) {
+      Debug(DBUG_MAX, "<%s> %s:process: post process entry%c\n", ' ');
+      pmr->pp = FALSE;
+
+      /* If an error was detected send the associated message, otherwise 
+       * we just go back into the idle state.
+       */
+      if (pmr->dsta == menuCarstatesERROR) {
+
+      /* Modified for GEM7. The status returned by dbPutLink should
+       * not be checked because, according to the gensub's code, it
+       * returns -1 if the record in not connected.
+       */
+      status = dbPutLink (&(pmr->msgl), DBR_STRING, pmr->mess, nRequest);
+
+      }
+      else if (pmr->dsta == menuCarstatesBUSY) {
+         pmr->dsta = menuCarstatesIDLE;
+         MARK(M_DSTA);
+      }
+
+      /* Modified for GEM7. The status returned by dbPutLink should
+       * not be checked because, according to the gensub's code, it
+       * returns -1 if the record in not connected
+       */
+      status = dbPutLink (&(pmr->dstl), DBR_LONG, &(pmr->dsta), nRequest);
+
+      /* fire off the forward link and record the time */
+      recGblFwdLink(pmr);   
+      recGblGetTimeStamp(pmr);
+   }   
+
+   /* Update alarms and trigger motors before leaving */
+   emrAlarm(pmr);
+   monitor (pmr);
+
+   pmr->pact = FALSE;
+   return (status);
+}
+
+/*
+ * Function auxiliary_process
+ * 
+ * This is the routine that used to be called directly by the ecsMotorRecord to handle
+ * all device related functions. This can be a result of either an external process
+ * request or an internal callback. The device can also be simulated in three levels
+ * of realism. Note that if a new operating mode is recieved while the system is
+ * starting or stopping a motion the command will be deferred until the system is stable.
+ */
+long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
+{
+    ecsMotorRecordPriv *pPriv = pmr->dpvt;
+    long status = S_ECS_OK;
+    long defer = FALSE;
+    long limval;
+
+   Debug(DBUG_FULL, "<%s> %s:auxiliary_process:entry%c\n", ' ');
+
+   /* Force a device position update when a RESET is received. This will
+    * make the record to update the device position with the right scaling
+    * factors after a reboot or init is performed. The device position is
+    * limited (see comment below) (PG 16/Jul/99).
+    */
+   if (pmr->mode == MODE_RESET) {
+      limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
+      pmr->mpos = (double) limval / pmr->psca;
+      MARK(M_MPOS);
+   }
+
+   /* In simulation mode handle everything seperatly */
+/*
+PGX: TESTING, disabled simulation for now
+   if (processSimulation (pmr, recordProcessType)) return status;
+*/
+
+   /* Internal callbacks and control buttons get handled here */
+   if (recordProcessType == PROCESS_INTERNAL || recordProcessType == PROCESS_BUTTON) {
+
+      /* Update device position if required. The device position is
+       * limited to numbers less than 60000 (negative values in the
+       * PLC side) to prevent problems when the encoders go below zero.
+       * The latter is needed to avoid problems in the high level
+       * systems, specifically the TCS (PG 16/Jul/99).
+       */
+      if (MARKED(M_RRBV)) {
+         limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
+          pmr->mpos = (double) limval / pmr->psca;
+          MARK(M_MPOS);
+      }
+
+      /* Keep an eye out for device failures */
+      status = checkFaultState(pmr);
+
+      /* Then process the system state if it is safe to do so */
+      if (!status ) status = processStateChange (pmr);
+
+      /* get rid of stop requests made while device was not moving */
+      pmr->stop = 0;
+
+      /* end of internal callback process. */
+      /* if there are no deferred commands return normally */
+      if (status || pPriv->operatingMode != DEFERRED_MODE) return (status);
+   }
+
+   /* External requests get handled here */
+   Debug(DBUG_FULL, "<%s> %s:auxiliary_process:external requests%c\n", ' ');
 
 
+   /* Always accept an initialization request */
+   if (pmr->mode == MODE_RESET) {
+      Debug(DBUG_MIN, "<%s> %s:Executing command %d\n", pmr->mode);
+      status = processInitialize (pmr);
+      return status;
+   }
+
+   /* Defer operator requests received during state transitions, we will be back*/
+   if (pmr->msta == MOTOR_POWERING   ||
+       pmr->msta == MOTOR_WRITING    ||
+       pmr->msta == MOTOR_CHECKING   ||
+       pmr->msta == MOTOR_STARTING   ||
+       pmr->msta == MOTOR_STOPPING   ||
+       pmr->msta == MOTOR_DEPOWERING ||
+       pmr->msta == MOTOR_FAILING) {
+      if (recordProcessType == PROCESS_NORMAL) {
+         Debug(DBUG_MIN, "<%s> %s:In transition, deferring command %d\n", pmr->mode);
+         pPriv->operatingMode = DEFERRED_MODE;
+         pPriv->deferredMode = pmr->mode;
+         pmr->mode = pPriv->lastMode;
+         pPriv->deferredTarget = pmr->val;
+         pmr->val = pPriv->lastVal;
+      }
+      defer = 1;
+   }
+   else defer = 0;
+   
+   if(!defer) {
+      /* If this is a deferred execution recover command and value */
+      if (pPriv->operatingMode == DEFERRED_MODE) {
+         Debug(DBUG_MIN, "<%s> %s:Recovering deferred value for command %d\n", pmr->mode);
+         pmr->mode = pPriv->deferredMode;
+         pmr->val = pPriv->deferredTarget;
+         pPriv->operatingMode = NORMAL_MODE;
+         pmr->pp = FALSE;
+      }
+
+      /* Save the input mode and value */
+      Debug(DBUG_MIN, "<%s> %s:Executing command %d\n", pmr->mode);
+      pPriv->lastMode = pmr->mode;
+      pPriv->lastVal = pmr->val;
+
+      /* Trap requests made while the device is offline or in a fault state  */
+      if (pmr->msta == MOTOR_OFF || pmr->msta == MOTOR_FAULT) {
+        status = recordError (pmr, "Must INIT system before using", S_ECS_OK);
+      }
+
+      /* Here is where we start action based a new operating mode*/
+      else if (pmr->mode != pPriv->currentMode)
+        status = processModeChange (pmr);
+
+      /* Position and velocity updates are valid during motion */
+      else if ((pmr->mode == MODE_MOVE && pmr->val != pPriv->currentTarget) ||
+             (pmr->mode == MODE_PARK && pmr->val != pPriv->currentTarget) ||
+             (pmr->mode == MODE_VMOVE && pmr->velo != pPriv->currentVelocity))
+         status = writingState (pmr);
+
+      /* This is totally bogus but forces a delay to insure that the CAR state change
+       * is visible to the outside world when no action was required.
+       */
+      if (pmr->msta == MOTOR_IDLE || pmr->msta == MOTOR_FAULT || pmr->msta == MOTOR_OFF) {
+         status = S_ECS_OK;
+         pmr->pp = FALSE;
+         setTimeout (pmr, ECS_SIM_TMO);
+      }
+   } /* if (!defer) */
+
+   return status;
+}
+
+
+/* PGX: This is the original process routine from Mike */
+#if 0
 /******************************************************************************
    process()
 
@@ -1873,6 +2114,7 @@ static long process(struct ecsMotorRecord * pmr)
    pmr->pact = FALSE;
    return (status);
 }
+#endif
 
 
 
@@ -2087,7 +2329,7 @@ monitor(struct ecsMotorRecord * pmr)
 static void
 post_MARKed_fields(struct ecsMotorRecord * pmr, unsigned short mask)
 {
-   Debug(DBUG_MAX, "<%s> %s:post_MARKed_fields entry = %zx\n", pmr->mmap);
+   Debug(DBUG_MAX, "<%s> %s:post_MARKed_fields entry = %x\n", pmr->mmap);
 
    if (MARKED(M_VAL)) {
       db_post_events(pmr, &pmr->val, mask);
