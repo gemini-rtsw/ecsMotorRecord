@@ -261,6 +261,9 @@ static void ecsMotorRecordScanTask(void *p) {
             }
          }
 
+/* PGX: TESTING - REMOVE: forced callback flags for now */
+pPriv->callbackFlags = 1;
+
          /*
           * if an asynchronous callback has occurred since the
           * last pass force the record to process.   If the record is
@@ -317,7 +320,10 @@ static void ecsMotorRecordScanTask(void *p) {
          }
          pPriv = (ecsMotorRecordPriv  *) ellNext (&pPriv->node);
       }
-      epicsThreadSleep(1.0/ECS_SCAN_RATE);
+      /* PGX: TESTING - RESTORE: slowed down scan rate
+       * epicsThreadSleep(1.0/ECS_SCAN_RATE);
+       */
+      epicsThreadSleep(10.0);
    }
 }
 
@@ -407,6 +413,7 @@ static long ecsMotorRecordProcessType(struct ecsMotorRecord *pmr) {
    }
 
    /* "button" fields such as stop and fault are detected here */
+   /* PGX: should be add a check for pmr->hinp here? */
    if (pmr->stop || pmr->flt != pPriv->fault) {
        Debug(DBUG_MAX, "<%s> %s:ecsMotorRecordProcessType:button%c\n", ' ');
        return PROCESS_BUTTON;
@@ -499,11 +506,13 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
 
    // tempLog3 ("writeHandshake %s: dmov=%d, pattern=%d\n", pmr->name, pmr->dmov, pattern);
 
-   if (pmr->dmov) pattern |= IN_POS_BIT;
+   if (pmr->dmov)
+       pattern |= IN_POS_BIT;
 
     /* Change this to a dbPutLink (mdw) */
     // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
     // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
+   pmr->hsta = pattern;
 
    if (status) {
       recordError (pmr, "ECS handshake write failure", status);
@@ -1229,6 +1238,9 @@ init_record(struct ecsMotorRecord * pmr, int pass) {
    ecsMotorRecordPriv *pPriv;
    long status = 0;
 
+/* PGX: TESTING - REMOVE: force debug level */
+pmr->dbug = DBUG_MAX;
+
    Debug(DBUG_MAX, "<%s> %s init_record pass = %d\n", pass);
 
    /* Do nothing on the first pass */
@@ -1761,11 +1773,10 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
       MARK(M_MPOS);
    }
 
-   /* In simulation mode handle everything seperatly */
-/*
-PGX: TESTING, disabled simulation for now
+   /*
+   PGX: TESTING - RESTORE: disabled simulation for now
    if (processSimulation (pmr, recordProcessType)) return status;
-*/
+   */
 
    /* Internal callbacks and control buttons get handled here */
    if (recordProcessType == PROCESS_INTERNAL || recordProcessType == PROCESS_BUTTON) {
@@ -1802,7 +1813,7 @@ PGX: TESTING, disabled simulation for now
 
    /* Always accept an initialization request */
    if (pmr->mode == MODE_RESET) {
-      Debug(DBUG_MIN, "<%s> %s:Executing command %d\n", pmr->mode);
+      Debug(DBUG_MIN, "<%s> %s:Executing command reset %d\n", pmr->mode);
       status = processInitialize (pmr);
       return status;
    }
@@ -1823,11 +1834,8 @@ PGX: TESTING, disabled simulation for now
          pPriv->deferredTarget = pmr->val;
          pmr->val = pPriv->lastVal;
       }
-      defer = 1;
    }
-   else defer = 0;
    
-   if(!defer) {
       /* If this is a deferred execution recover command and value */
       if (pPriv->operatingMode == DEFERRED_MODE) {
          Debug(DBUG_MIN, "<%s> %s:Recovering deferred value for command %d\n", pmr->mode);
@@ -1865,258 +1873,9 @@ PGX: TESTING, disabled simulation for now
          pmr->pp = FALSE;
          setTimeout (pmr, ECS_SIM_TMO);
       }
-   } /* if (!defer) */
 
    return status;
 }
-
-
-/* PGX: This is the original process routine from Mike */
-#if 0
-/******************************************************************************
-   process()
-
-Called for the following reasons:
-
-1) Someone poked our .proc field, or some other field that is marked
-'process-passive' in the motorRecord.ascii file.  In this case, we
-read the input links and dive directly into device support.
-
-2) Device support triggered an asynchronous callback.   This is done so that
-the fields changed during device processing are posted as they change.   Input
-links are not read during callback processing. 
-
-3) A change in the fault status was detected.   This is treated like 
-a callback in that it was not directly requested by the operator.
-*******************************************************************************/
-static long process(struct ecsMotorRecord * pmr)
-{
-   // struct ecsMotorDset *pdset = (struct ecsMotorDset *) (pmr->dset);
-   
-   ecsMotorRecordPriv *pPriv = pmr->dpvt;
-   long recordProcessType;
-   long status, nRequest=1;
-
-   long limval;
-   int defer = 0;
-
-   if (pmr->pact)
-      return (0);
-
-   Debug(DBUG_MAX, "<%s> %s:process begin%c\n", ' ');
-   pmr->pact = TRUE;
-
-   /* 
-    * Ask the device support to determine wether or not this
-    * processing was a result of an operator request i.e. mode
-    * change.   If so it will be necessary to mark the record as
-    * busy and read all of the input links before processing.
-    */
-   // recordProcessType = (*pdset->processType) (pmr);
-   recordProcessType = ecsMotorRecordProcessType(pmr);
-
-   if (recordProcessType == PROCESS_NORMAL) {
-     Debug(DBUG_MAX, "<%s> %s:process external process request%c\n", ' ');
-
-     /* Clear the last error and indicate that the record is busy */
-     pmr->mess[0] = '\0';
-     MARK(M_MESS);
-     pmr->dsta = menuCarstatesBUSY;
-     MARK(M_DSTA);
-#if 0
-     status = recGblPutFastLink (&(pmr->dstl), (void *) pmr, &(pmr->dsta));
-     if (status) return (status);
-#endif
-
-     /* Check input links for new operating conditions */
-     status = readInputLinks (pmr);
-     if (status) return (status);
-   }
-
-#if 0
-// No device support!
-   /*
-    * No other epics interface stuff to do so let device
-    * support code take over from here.
-    */
-   Debug(DBUG_FULL, "<%s> %s:invoke device processing%c\n", ' ');
-   status = (*pdset->processRecord) (pmr, recordProcessType);
-#endif
-
-#if 1
-// Begin import from former device support
-
-   /* Force a device position update when a RESET is received. This will
-    * make the record to update the device position with the right scaling
-    * factors after a reboot or init is performed. The device position is
-    * limited (see comment below) (PG 16/Jul/99).
-    */
-   if (pmr->mode == MODE_RESET) {
-      limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
-      pmr->mpos = (double) limval / pmr->psca;
-      MARK(M_MPOS);
-   }
-
-   /* In simulation mode handle everything seperatly */
-   if (processSimulation (pmr, recordProcessType)) return status;
-
-   /* Internal callbacks and control buttons get handled here */
-   if (recordProcessType == PROCESS_INTERNAL || recordProcessType == PROCESS_BUTTON) {
-
-      /* Update device position if required. The device position is
-       * limited to numbers less than 60000 (negative values in the
-       * PLC side) to prevent problems when the encoders go below zero.
-       * The latter is needed to avoid problems in the high level
-       * systems, specifically the TCS (PG 16/Jul/99).
-       */
-      if (MARKED(M_RRBV)) {
-         limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
-          pmr->mpos = (double) limval / pmr->psca;
-          MARK(M_MPOS);
-      }
-
-      /* Keep an eye out for device failures */
-      status = checkFaultState(pmr);
-
-      /* Then process the system state if it is safe to do so */
-      if (!status ) status = processStateChange (pmr);
-
-      /* get rid of stop requests made while device was not moving */
-      pmr->stop = 0;
-
-      /* end of internal callback process. */
-      /* if there are no deferred commands return normally */
-      if (status || pPriv->operatingMode != DEFERRED_MODE) return (status);
-   }
-
-   /* External requests get handled here */
-
-   /* Always accept an initialization request */
-   if (pmr->mode == MODE_RESET) {
-      Debug(DBUG_MIN, "<%s> %s:Executing command %d\n", pmr->mode);
-      status = processInitialize (pmr);
-      return status;
-   }
-
-   /* Defer operator requests received during state transitions, we will be back*/
-   if (pmr->msta == MOTOR_POWERING   ||
-       pmr->msta == MOTOR_WRITING    ||
-       pmr->msta == MOTOR_CHECKING   ||
-       pmr->msta == MOTOR_STARTING   ||
-       pmr->msta == MOTOR_STOPPING   ||
-       pmr->msta == MOTOR_DEPOWERING ||
-       pmr->msta == MOTOR_FAILING) {
-      if (recordProcessType == PROCESS_NORMAL) {
-         Debug(DBUG_MIN, "<%s> %s:In transition, deferring command %d\n", pmr->mode);
-         pPriv->operatingMode = DEFERRED_MODE;
-         pPriv->deferredMode = pmr->mode;
-         pmr->mode = pPriv->lastMode;
-         pPriv->deferredTarget = pmr->val;
-         pmr->val = pPriv->lastVal;
-      }
-      defer = 1;
-   }
-   else defer = 0;
-   
-   if(!defer) {
-      /* If this is a deferred execution recover command and value */
-      if (pPriv->operatingMode == DEFERRED_MODE) {
-         Debug(DBUG_MIN, "<%s> %s:Recovering deferred value for command %d\n", pmr->mode);
-         pmr->mode = pPriv->deferredMode;
-         pmr->val = pPriv->deferredTarget;
-         pPriv->operatingMode = NORMAL_MODE;
-         pmr->pp = FALSE;
-      }
-
-      /* Save the input mode and value */
-      Debug(DBUG_MIN, "<%s> %s:Executing command %d\n", pmr->mode);
-      pPriv->lastMode = pmr->mode;
-      pPriv->lastVal = pmr->val;
-
-      /* Trap requests made while the device is offline or in a fault state  */
-      if (pmr->msta == MOTOR_OFF || pmr->msta == MOTOR_FAULT) {
-        status = recordError (pmr, "Must INIT system before using", S_ECS_OK);
-      }
-
-      /* Here is where we start action based a new operating mode*/
-      else if (pmr->mode != pPriv->currentMode)
-        status = processModeChange (pmr);
-
-      /* Position and velocity updates are valid during motion */
-      else if ((pmr->mode == MODE_MOVE && pmr->val != pPriv->currentTarget) ||
-             (pmr->mode == MODE_PARK && pmr->val != pPriv->currentTarget) ||
-             (pmr->mode == MODE_VMOVE && pmr->velo != pPriv->currentVelocity))
-         status = writingState (pmr);
-
-      /* This is totally bogus but forces a delay to insure that the CAR state change
-       * is visible to the outside world when no action was required.
-       */
-      if (pmr->msta == MOTOR_IDLE || pmr->msta == MOTOR_FAULT || pmr->msta == MOTOR_OFF) {
-         status = S_ECS_OK;
-         pmr->pp = FALSE;
-         setTimeout (pmr, ECS_SIM_TMO);
-      }
-   } /* if (!defer) */
-#endif
-
-
-   if (status) {
-     pmr->dsta = menuCarstatesERROR;
-     pmr->pp = TRUE;
-   }
-
-   Debug(DBUG_FULL, "<%s> %s:device processing return %ld\n", status);
-
-   /* if Post Process request perform epics completion tasks */
-   if (pmr->pp) {
-      Debug(DBUG_MAX, "<%s> %s:process: post process entry%c\n", ' ');
-      pmr->pp = FALSE;
-
-      /* If an error was detected send the associated message, otherwise 
-       * we just go back into the idle state.
-       */
-      if (pmr->dsta == menuCarstatesERROR) {
-#if 0
-      status = recGblPutLinkValue (&(pmr->msgl),(void *) pmr, DBR_STRING, pmr->mess, &nRequest);
-      if (status) return status;
-#endif
-      /* Modified for GEM7. The status returned by dbPutLink should
-       * not be checked because, according to the gensub's code, it
-       * returns -1 if the record in not connected.
-       */
-      status = dbPutLink (&(pmr->msgl), DBR_STRING, pmr->mess, nRequest);
-
-      }
-      else if (pmr->dsta == menuCarstatesBUSY) {
-         pmr->dsta = menuCarstatesIDLE;
-         MARK(M_DSTA);
-      }
-
-#if 0
-      status = recGblPutFastLink (&(pmr->dstl),(void *) pmr, &(pmr->dsta));
-      if (status) return status;
-#endif
-      /* Modified for GEM7. The status returned by dbPutLink should
-       * not be checked because, according to the gensub's code, it
-       * returns -1 if the record in not connected
-       */
-      status = dbPutLink (&(pmr->dstl), DBR_LONG, &(pmr->dsta), nRequest);
-
-      /* fire off the forward link and record the time */
-      recGblFwdLink(pmr);   
-      recGblGetTimeStamp(pmr);
-   }   
-
-   /* Update alarms and trigger motors before leaving */
-   emrAlarm(pmr);
-   monitor (pmr);
-
-   pmr->pact = FALSE;
-   return (status);
-}
-#endif
-
-
 
 
 /******************************************************************************
