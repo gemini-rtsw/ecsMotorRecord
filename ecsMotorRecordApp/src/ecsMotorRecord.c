@@ -1668,7 +1668,7 @@ static long process(struct ecsMotorRecord * pmr)
      pmr->pp = TRUE;
    }
 
-   Debug(DBUG_MAX, "<%s> %s:auxiliary processing return %ld\n", status);
+   Debug(DBUG_MAX, "<%s> %s:auxiliary processing returned %ld\n", status);
 
    /* if Post Process request perform epics completion tasks */
    if (pmr->pp) {
@@ -1708,6 +1708,9 @@ static long process(struct ecsMotorRecord * pmr)
    monitor (pmr);
 
    pmr->pact = FALSE;
+
+   Debug(DBUG_MAX, "<%s> %s:process end%c\n", ' ');
+
    return (status);
 }
 
@@ -1839,6 +1842,8 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
          pmr->pp = FALSE;
          setTimeout (pmr, ECS_SIM_TMO);
       }
+
+   Debug(DBUG_MAX, "<%s> %s:auxiliary processing end %ld\n", status);
 
    return status;
 }
