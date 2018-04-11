@@ -223,6 +223,7 @@ static void ecsMotorRecordScanTask(void *p) {
    ecsMotorRecordPriv *pPriv;
    struct ecsMotorRecord *pmr = NULL;
    struct rset *pRset;
+   int inPosition;
 
    /* if we delete this scan task, most of the below will have
       to moved to the process() routine. (mdw) */
@@ -261,11 +262,34 @@ static void ecsMotorRecordScanTask(void *p) {
             }
          }
 
-/* PGX: TESTING - REMOVE: forced callback flags for now */
-pPriv->callbackFlags = 1;
+	/* Handle changes in the input handshake.
+	 */
+	if (pmr->hinp != pPriv->handshake) {
 
-         /*
-          * if an asynchronous callback has occurred since the
+	    Debug(DBUG_MAX, "<%s> %s:detected handshake change to %d\n", pmr->hinp);
+
+	    pPriv->handshake = pmr->hinp;
+
+	    inPosition = ((pmr->hinp & IN_POS_BIT) != 0);
+	    if (inPosition != pPriv->inPosition) {
+		pPriv->inPosition = inPosition;
+	    }
+
+	    pPriv->callbackFlags |= DATA_READ;
+	}
+
+	/* Handle changes in the encoder.
+	 */
+	if (pmr->rrbv != pPriv->encoder) {
+	    Debug(DBUG_MAX, "<%s> %s:detected encoder change to %d\n", pmr->rrbv);
+	    pPriv->encoder = pmr->rrbv;
+	    pPriv->callbackFlags |= DATA_READ;
+	}
+
+/* PGX: TESTING - REMOVE: forced callback flags for now
+pPriv->callbackFlags = 1;
+ */
+         /* if an asynchronous callback has occurred since the
           * last pass force the record to process.   If the record is
           * busy ... no mattah' ... defer 'till next pass.
           */
@@ -293,8 +317,14 @@ pPriv->callbackFlags = 1;
 /* slight change of how we use the storage here */
 /* priv->encoder now stores old value of position */
 /* instead of other way araound */
+#if 0
+PGX: only need to mark
                if (pmr->rrbv != pPriv->encoder) {
                   pPriv->encoder = pmr->rrbv; 
+                  MARK(M_RRBV);
+               }
+#endif
+               if (pmr->rrbv != pPriv->encoder) {
                   MARK(M_RRBV);
                }
 
