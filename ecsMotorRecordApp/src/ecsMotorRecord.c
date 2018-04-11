@@ -228,7 +228,8 @@ static void ecsMotorRecordScanTask(void *p) {
    /* if we delete this scan task, most of the below will have
       to moved to the process() routine. (mdw) */
    while (TRUE) {
-   /* For each record in the list .. */
+
+      /* For each record in the list .. */
       pPriv = (ecsMotorRecordPriv *) ellFirst(&ecsMotorRecordScanList);
       while (pPriv) {
          pmr = (struct ecsMotorRecord *) pPriv->pmr;
@@ -286,9 +287,11 @@ static void ecsMotorRecordScanTask(void *p) {
 	    pPriv->callbackFlags |= DATA_READ;
 	}
 
-/* PGX: TESTING - REMOVE: forced callback flags for now
-pPriv->callbackFlags = 1;
- */
+	/* Handle changes in the position demand feedback.
+	if (pmr->pdfb != pPriv->encoder) {
+	}
+	 */
+
          /* if an asynchronous callback has occurred since the
           * last pass force the record to process.   If the record is
           * busy ... no mattah' ... defer 'till next pass.
@@ -303,6 +306,9 @@ pPriv->callbackFlags = 1;
                if (pPriv->callbackFlags & DATA_WRITE) MARK(M_WRITE);
                if (pPriv->callbackFlags & TIMEOUT_OVER) MARK(M_TIMEOUT);
                if (pPriv->callbackFlags & DATA_ERROR) MARK(M_ERROR);
+
+	       /* Update output handshake
+		*/
                if (pmr->hsta != pPriv->handshake) {
 		    Debug(DBUG_MAX, "<%s> %s:setting hsta:%d\n", pPriv->handshake);
                     pmr->hsta = pPriv->handshake;
@@ -770,6 +776,7 @@ writingState (struct ecsMotorRecord *pmr) {
 
         if (pmr->mode == MODE_VMOVE) {
             impliedDecimal = (unsigned) (pmr->velo * pmr->vsca);
+#if 0
              /* Convert this to a dbPutLink()   (mdw) */
              // status = drvAbDf1WriteAnalog (pPriv->pWriteVelPriv, impliedDecimal);
               //status = dbPutLink( impliedDecimal);
@@ -777,7 +784,8 @@ writingState (struct ecsMotorRecord *pmr) {
                 status = recordError (pmr, "ECS velocity write failure", status);
                 return (status);
             }
-            Debug(DBUG_MIN, "<%s> %s:velocity word write %d \n", impliedDecimal);
+#endif
+            Debug(DBUG_MIN, "<%s> %s:velocity word write %d\n", impliedDecimal);
         }
         else {
             impliedDecimal = (unsigned) (pmr->val * pmr->psca);
@@ -792,8 +800,8 @@ writingState (struct ecsMotorRecord *pmr) {
                 status = recordError (pmr, "ECS position write failure", status);
                    return (status);
             }
-            Debug(DBUG_MIN, "<%s> %s:position word write %d \n", impliedDecimal);
 #endif
+            Debug(DBUG_MIN, "<%s> %s:position word write %d\n", impliedDecimal);
         }
         setTimeout (pmr, ECS_WRITE_TMO);
         return status;
