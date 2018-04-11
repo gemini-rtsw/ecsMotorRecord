@@ -135,6 +135,7 @@ field to all listeners.  monitor() does this.
 #define M_STOP          	0x00100000
 #define M_MDBD          	0x00200000
 #define M_DBUG         	        0x00400000
+#define M_RPOS         	        0x00800000
 
 /* funky macros to handle the above */
 #define MARK(a)	                pmr->mmap |= (a);

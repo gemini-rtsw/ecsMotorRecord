@@ -775,7 +775,9 @@ writingState (struct ecsMotorRecord *pmr) {
             MARK(M_MSTA);
 
         if (pmr->mode == MODE_VMOVE) {
+	    /* PGX: not supported */
             impliedDecimal = (unsigned) (pmr->velo * pmr->vsca);
+            Debug(DBUG_MIN, "<%s> %s:velocity word write %d\n", impliedDecimal);
 #if 0
              /* Convert this to a dbPutLink()   (mdw) */
              // status = drvAbDf1WriteAnalog (pPriv->pWriteVelPriv, impliedDecimal);
@@ -785,13 +787,13 @@ writingState (struct ecsMotorRecord *pmr) {
                 return (status);
             }
 #endif
-            Debug(DBUG_MIN, "<%s> %s:velocity word write %d\n", impliedDecimal);
         }
         else {
-            impliedDecimal = (unsigned) (pmr->val * pmr->psca);
-
             /* this is now our raw position demand */
+            impliedDecimal = (unsigned) (pmr->val * pmr->psca);
             pmr->rpos = impliedDecimal;
+	    MARK(M_RPOS);
+            Debug(DBUG_MIN, "<%s> %s:position word write %d\n", impliedDecimal);
 #if 0
             /* if we decide to have an OUT link for the position demand, 
                we'll need to Convert this to a dbPutLink()   (mdw) */
@@ -801,7 +803,6 @@ writingState (struct ecsMotorRecord *pmr) {
                    return (status);
             }
 #endif
-            Debug(DBUG_MIN, "<%s> %s:position word write %d\n", impliedDecimal);
         }
         setTimeout (pmr, ECS_WRITE_TMO);
         return status;
@@ -2179,6 +2180,10 @@ post_MARKed_fields(struct ecsMotorRecord * pmr, unsigned short mask)
    }
    if (MARKED(M_MDBD)) {
       db_post_events(pmr, &pmr->mdbd, mask);
+      UNMARK(M_MDBD);
+   }
+   if (MARKED(M_RPOS)) {
+      db_post_events(pmr, &pmr->rpos, mask);
       UNMARK(M_MDBD);
    }
 
