@@ -152,6 +152,13 @@ recordtype(ecsMotor) {
 		interest(0)
 		base(DECIMAL)
 	}
+        field(PDFB,DBF_LONG) {
+		prompt("Position demand feedback")
+		asl(ASL1)
+		pp(NO)
+		interest(0)
+		base(DECIMAL)
+	}
         field(RRBV,DBF_LONG) {
 		prompt("Raw positon readback")
 		asl(ASL1)
