@@ -527,10 +527,9 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
 static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
    //ecsMotorRecordPriv *pPriv = pmr->dpvt;
    long status = S_ECS_OK;
+   unsigned int mask;
 
     Debug(DBUG_FULL, "<%s> %s:handshake word write %x \n", pattern);
-
-   // tempLog3 ("writeHandshake %s: dmov=%d, pattern=%d\n", pmr->name, pmr->dmov, pattern);
 
    if (pmr->dmov)
        pattern |= IN_POS_BIT;
@@ -538,12 +537,17 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
     /* Change this to a dbPutLink (mdw) */
     // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
     // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
-   pmr->hsta = pattern;
+   mask = (pmr->hsta & PWR_BIT) | (pmr->hsta & PWR_ACK_BIT);
+   Debug(DBUG_MAX, "<%s> %s:handshake word write mask %x \n", mask);
+   pmr->hsta = pattern | mask;
    MARK(M_HSTA);
 
+#if 0
+/* no longer needed PGX */
    if (status) {
       recordError (pmr, "ECS handshake write failure", status);
    }
+#endif
    return (status);
 }
 
