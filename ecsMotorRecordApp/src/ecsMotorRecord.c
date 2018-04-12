@@ -234,7 +234,7 @@ static void ecsMotorRecordScanTask(void *p) {
       while (pPriv) {
          pmr = (struct ecsMotorRecord *) pPriv->pmr;
          pRset = (struct rset *) pmr->rset;
-         Debug(DBUG_MAX, "<%s> %s:=== scanTask:entry (%s) ===========\n", pmr->name);
+         Debug(DBUG_MAX, "<%s> %s:\n------------ scanTask:entry ------------%c\n", ' ');
 
          /* adjust the timeout timer */
          if (pPriv->timeoutActive) {
@@ -266,16 +266,12 @@ static void ecsMotorRecordScanTask(void *p) {
 	/* Handle changes in the input handshake.
 	 */
 	if (pmr->hinp != pPriv->handshake) {
-
 	    Debug(DBUG_MAX, "<%s> %s:detected handshake change to %d\n", pmr->hinp);
-
 	    pPriv->handshake = pmr->hinp;
-
 	    inPosition = ((pmr->hinp & IN_POS_BIT) != 0);
 	    if (inPosition != pPriv->inPosition) {
 		pPriv->inPosition = inPosition;
 	    }
-
 	    pPriv->callbackFlags |= DATA_READ;
 	}
 
@@ -288,9 +284,10 @@ static void ecsMotorRecordScanTask(void *p) {
 	}
 
 	/* Handle changes in the position demand feedback.
-	if (pmr->pdfb != pPriv->encoder) {
-	}
 	 */
+	if (pmr->msta == MOTOR_WRITING && (pmr->pdfb == pmr->rpos)) {
+	    pPriv->callbackFlags |= DATA_WRITE;
+	}
 
          /* if an asynchronous callback has occurred since the
           * last pass force the record to process.   If the record is
@@ -345,17 +342,17 @@ PGX: only need to mark
                epicsMutexUnlock(pPriv->mutexSem);
 
                /* and then process the record */
-               Debug(DBUG_MAX, "<%s> %s:Scan Task re-processing record:%c\n",' ');
+               Debug(DBUG_MAX, "<%s> %s:Scan Task re-processing record%c\n",' ');
                dbScanLock ((struct dbCommon *) pmr);
                (*pRset->process) (pmr);
                dbScanUnlock ((struct dbCommon *) pmr);
             }
                else {
-                   Debug(DBUG_FULL, "<%s> %s:Scan Task .. record busy:%c\n",' ');
+                   Debug(DBUG_FULL, "<%s> %s:Scan Task .. record busy%c\n",' ');
                }
          }
          pPriv = (ecsMotorRecordPriv  *) ellNext (&pPriv->node);
-	 Debug(DBUG_FULL, "<%s> %s:Scan Task .. end of record loop:%c\n", ' ');
+	 Debug(DBUG_FULL, "<%s> %s:Scan Task .. end of record loop%c\n", ' ');
       }
       /* PGX: TESTING - RESTORE: slowed down scan rate
        * epicsThreadSleep(1.0/ECS_SCAN_RATE);
@@ -470,32 +467,31 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
 
    Debug(DBUG_FULL, "<%s> %s:processModeChange:entry%c\n", ' ');
 
-   // tempLog3 ("processModeChange %s: mode=%d, hsta=%x", pmr->name, pmr->mode, pmr->hsta);
-
    if (pmr->mode == pPriv->currentMode) return S_ECS_OK;
 
 
    /* process depending on requested mode */
    switch (pmr->mode) {
       case MODE_STOP:
-          //tempLog1 ("processModeChange %s: STOP, to stoppingState", pmr->name);
+	  Debug(DBUG_MAX, "<%s> %s:processModeChange:stop%c\n", ' ');
           status = stoppingState (pmr);
           break;
 
       case MODE_VMOVE:
+	  Debug(DBUG_MAX, "<%s> %s:processModeChange:vmove%c\n", ' ');
          if (!(pmr->vms)) {
             status = recordError (pmr, "Velocity mode not supported", S_ECS_OK);
             return (status);
          }
       case MODE_MOVE:
       case MODE_PARK:
-         // tempLog1 ("processModeChange %s: MOVE & PARK, to writingState", pmr->name);
+	  Debug(DBUG_MAX, "<%s> %s:processModeChange:move and park%c\n", ' ');
          status = writingState (pmr);
          break;
 
       case MODE_PAUSE:
+	  Debug(DBUG_MAX, "<%s> %s:processModeChange:pause%c\n", ' ');
          if (pPriv->currentMode == MODE_MOVE) {
-            // tempLog1 ("processModeChange %s: PAUSE, to stoppingState", pmr->name);
             status = stoppingState (pmr);
          }
          else {
@@ -504,8 +500,8 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
          break;
 
          case MODE_RESUME:
+	    Debug(DBUG_MAX, "<%s> %s:processModeChange:resume%c\n", ' ');
             if (pPriv->currentMode == MODE_PAUSE) {
-               // tempLog1 ("processModeChange %s: RESUME, to startingState", pmr->name);
             status = startingState (pmr);
             pmr->mode = MODE_MOVE;
          }
@@ -517,7 +513,6 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
       default:
          recordError (pmr, "Unsupported mode", S_ECS_OK);
          break;
-
     }
     pPriv->currentMode = pmr->mode;
     return status;
@@ -544,6 +539,7 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
     // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
     // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
    pmr->hsta = pattern;
+   MARK(M_HSTA);
 
    if (status) {
       recordError (pmr, "ECS handshake write failure", status);
@@ -887,8 +883,6 @@ startingState (struct ecsMotorRecord *pmr) {
     /* Upon entry enable the drive if it is not already on */
     Debug(DBUG_FULL, "<%s> %s:startingState%c\n", ' ');
 
-    // tempLog2 ("startingState %s: msta=%d\n", pmr->name, pmr->msta);
-
     if (pmr->msta != MOTOR_STARTING) {
         pmr->msta = MOTOR_STARTING;
         MARK(M_MSTA);
@@ -932,8 +926,6 @@ movingState (struct ecsMotorRecord *pmr) {
 
     Debug(DBUG_FULL, "<%s> %s:movingState%c\n", ' ');
 
-    // tempLog5 ("movingState %s: msta=%d, dmov=%d, stop=%d, hsta=%x\n", pmr->name, pmr->msta, pmr->dmov, pmr->stop, pmr->hsta);
-
     /* Upon entry update the status words */
     if (pmr->msta != MOTOR_MOVING) {
         pmr->msta = MOTOR_MOVING;
@@ -956,7 +948,6 @@ movingState (struct ecsMotorRecord *pmr) {
     }
     else if (!(pmr->hsta & DRV_ACK_BIT)) {
         status = stoppingState (pmr);
-    // tempLog2 ("movingState %s, after stopping call: mode=%d\n", pmr->name, pmr->mode);
         if (pmr->mode != MODE_PARK) {
             status = recordError (pmr, "PLC has disabled drive, motion failed", S_ECS_HSK_SYNC);
         }
