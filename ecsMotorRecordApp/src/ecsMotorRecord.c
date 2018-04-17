@@ -1242,7 +1242,7 @@ init_record(struct ecsMotorRecord * pmr, int pass) {
    long status = 0;
 
 /* PGX: TESTING - REMOVE: force debug level */
-pmr->dbug = DBUG_MAX;
+// pmr->dbug = DBUG_MAX;
 
    Debug(DBUG_MAX, "<%s> %s init_record pass = %d\n", pass);
 
