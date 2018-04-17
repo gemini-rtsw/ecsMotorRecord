@@ -1,21 +1,21 @@
 [schematic2]
-uniq 40
+uniq 41
 [tools]
 [detail]
 w 28 3107 100 0 n#1 inhier.Encoder.P -24 3104 80 3104 elongins.elongins#7.INP
 w 440 3299 100 0 n#2 elongins.elongins#5.FLNK 336 3296 544 3296 elongouts.elongouts#50.SLNK
 w 380 3267 100 0 n#3 elongins.elongins#5.VAL 336 3264 424 3264 424 3328 544 3328 elongouts.elongouts#50.DOL
-w 448 3091 100 0 n#4 elongins.elongins#7.FLNK 336 3088 544 3088 elongouts.elongouts#51.SLNK
-w 384 3059 100 0 n#5 elongins.elongins#7.VAL 336 3056 416 3056 416 3120 544 3120 elongouts.elongouts#51.DOL
+w 440 3091 100 0 n#4 elongins.elongins#7.FLNK 336 3088 544 3088 elongouts.elongouts#51.SLNK
+w 376 3059 100 0 n#5 elongins.elongins#7.VAL 336 3056 416 3056 416 3120 544 3120 elongouts.elongouts#51.DOL
 w 2232 3043 100 0 n#6 elongouts.elongouts#10.OUT 2096 3040 2368 3040 outhier.PositionDemand.p
 w 2232 2819 100 0 n#7 elongouts.elongouts#36.OUT 2096 2816 2368 2816 outhier.VelocityDemand.p
 w 2232 3331 100 0 n#8 elongouts.elongouts#8.FLNK 2096 3328 2368 3328 outhier.Flink.p
-w 2232 3267 100 0 n#9 elongouts.elongouts#8.OUT 2096 3264 2368 3264 outhier.HandshakeStatus.p
+w 2232 3267 100 0 n#9 elongouts.elongouts#8.OUT 2096 3264 2368 3264 outhier.HandshakeOutput.p
 w 1112 2387 100 0 n#10 ecalcs.ecalcs#42.INPA 1168 2384 1056 2384 1056 2432 1488 2432 1488 2192 1456 2192 ecalcs.ecalcs#42.VAL
 w 2128 2883 100 0 n#11 elongouts.elongouts#36.FLNK 2096 2880 2160 2880 2160 2928 1744 2928 1744 3072 1840 3072 elongouts.elongouts#10.SLNK
 w 2128 3107 100 0 n#12 elongouts.elongouts#10.FLNK 2096 3104 2160 3104 2160 3152 1760 3152 1760 3296 1840 3296 elongouts.elongouts#8.SLNK
 w 1592 2227 100 0 n#13 ecalcs.ecalcs#42.FLNK 1456 2224 1728 2224 1728 2848 1840 2848 elongouts.elongouts#36.SLNK
-w 28 3315 100 0 n#14 inhier.Handshake.P -24 3312 80 3312 elongins.elongins#5.INP
+w 28 3315 100 0 n#14 inhier.HandshakeInput.P -24 3312 80 3312 elongins.elongins#5.INP
 w 828 3795 100 0 n#15 inhier.Mode.P 520 3792 1136 3792 1136 3328 1144 3328 eecsmotor.eecsmotor#45.MODE
 w 848 3267 100 0 n#16 elongouts.elongouts#50.OUT 800 3264 896 3264 896 3192 1144 3192 eecsmotor.eecsmotor#45.HINP
 w 896 3059 100 0 n#17 elongouts.elongouts#51.OUT 800 3056 992 3056 992 3160 1144 3160 eecsmotor.eecsmotor#45.RRBV
@@ -41,6 +41,7 @@ w 792 2515 100 0 n#36 ecalcs.ecalcs#46.FLNK 464 2512 1120 2512 1120 2992 1144 29
 w 440 3507 100 0 n#37 elongins.elongins#47.FLNK 336 3504 544 3504 elongouts.elongouts#49.SLNK
 w 376 3475 100 0 n#38 elongins.elongins#47.VAL 336 3472 416 3472 416 3536 544 3536 elongouts.elongouts#49.DOL
 w 864 3475 100 0 n#39 elongouts.elongouts#49.OUT 800 3472 928 3472 928 3232 1144 3232 eecsmotor.eecsmotor#45.PDFB
+w -14 3522 -100 0 n#40 inhier.PositionFeedback.P -32 3520 80 3520 elongins.elongins#47.INP
 [cell use]
 use bc200tr -424 1560 100 0 bc200tr#39
 xform 0 1256 2840
@@ -52,10 +53,12 @@ use elongins 80 3232 100 0 elongins#5
 xform 0 208 3280
 p 136 3196 100 0 1 DTYP:$(dtyp)
 p 135 3216 100 1024 1 name:$(top)$(dev)HsIn
+p 135 3176 100 0 1 SCAN:.5 second
 use elongins -91 3084 100 0 elongins#7
 xform 0 208 3072
 p 138 3007 100 1024 1 name:$(top)$(dev)Encoder
 p 138 2985 100 0 1 DTYP:$(dtyp)
+p 140 2964 100 0 1 SCAN:.5 second
 use elongouts 1840 3232 100 0 elongouts#8
 xform 0 1968 3296
 p 1902 3217 100 1024 1 name:$(top)$(dev)HsOut
@@ -95,11 +98,11 @@ xform 0 1968 2848
 p 1903 2766 100 1024 1 name:$(top)$(dev)VelDmd
 p 1903 2746 100 0 1 DTYP:$(dtyp)
 p 1901 2726 100 0 1 OMSL:closed_loop
-use inhier -180 3305 100 0 Handshake
+use inhier -240 3305 100 0 HandshakeInput
 xform 0 -24 3312
-use inhier -180 3097 100 0 Encoder
+use inhier -239 3099 100 0 Encoder
 xform 0 -24 3104
-use outhier 2414 3259 100 0 HandshakeStatus
+use outhier 2414 3259 100 0 HandshakeOutput
 xform 0 2352 3264
 use outhier 2414 3035 100 0 PositionDemand
 xform 0 2352 3040
@@ -123,6 +126,7 @@ use elongins 80 3440 100 0 elongins#47
 xform 0 208 3488
 p 144 3418 100 1024 1 name:$(top)$(dev)PosDmdFb
 p 144 3393 100 0 1 DTYP:$(dtyp)
+p 142 3372 100 0 1 SCAN:.5 second
 use elongouts 544 3440 100 0 elongouts#49
 xform 0 672 3504
 p 607 3421 100 1024 1 name:$(top)$(dev)PosLo
@@ -135,4 +139,6 @@ use elongouts 544 3024 100 0 elongouts#51
 xform 0 672 3088
 p 609 3006 100 1024 1 name:$(top)$(dev)EncLo
 p 610 2985 100 0 1 OMSL:closed_loop
+use inhier -240 3514 100 0 PositionFeedback
+xform 0 -32 3520
 [comments]
