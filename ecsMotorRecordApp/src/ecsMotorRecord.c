@@ -234,6 +234,7 @@ static void ecsMotorRecordScanTask(void *p) {
       while (pPriv) {
          pmr = (struct ecsMotorRecord *) pPriv->pmr;
          pRset = (struct rset *) pmr->rset;
+
          Debug(DBUG_MAX, "<%s> %s:\n------------ scanTask:entry ------------%c\n", ' ');
 
          /* adjust the timeout timer */
@@ -266,7 +267,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	/* Handle changes in the input handshake.
 	 */
 	if (pmr->hinp != pPriv->handshake) {
-	    Debug(DBUG_MAX, "<%s> %s:detected handshake change to %d\n", pmr->hinp);
+	    Debug(DBUG_FULL, "<%s> %s:detected handshake change to %d\n", pmr->hinp);
 	    pPriv->handshake = pmr->hinp;
 	    inPosition = ((pmr->hinp & IN_POS_BIT) != 0);
 	    if (inPosition != pPriv->inPosition) {
@@ -278,7 +279,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	/* Handle changes in the encoder.
 	 */
 	if (pmr->rrbv != pPriv->encoder) {
-	    Debug(DBUG_MAX, "<%s> %s:detected encoder change to %d\n", pmr->rrbv);
+	    Debug(DBUG_FULL, "<%s> %s:detected encoder change to %d\n", pmr->rrbv);
 	    pPriv->encoder = pmr->rrbv;
 	    pPriv->callbackFlags |= DATA_READ;
 	}
@@ -295,6 +296,8 @@ static void ecsMotorRecordScanTask(void *p) {
           */
          if (pPriv->callbackFlags) {
 
+	    Debug(DBUG_FULL, "<%s> %s:detected callback flags change %x\n", pPriv->callbackFlags);
+
             /* defer processing if the record is busy */
             if (!pmr->pact) {
 
@@ -307,7 +310,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	       /* Update output handshake
 		*/
                if (pmr->hsta != pPriv->handshake) {
-		    Debug(DBUG_MAX, "<%s> %s:setting hsta:%d\n", pPriv->handshake);
+		    Debug(DBUG_FULL, "<%s> %s:setting hsta:%d\n", pPriv->handshake);
                     pmr->hsta = pPriv->handshake;
                     MARK(M_HSTA);
                }
@@ -352,7 +355,7 @@ PGX: only need to mark
                }
          }
          pPriv = (ecsMotorRecordPriv  *) ellNext (&pPriv->node);
-	 Debug(DBUG_FULL, "<%s> %s:Scan Task .. end of record loop%c\n", ' ');
+	 Debug(DBUG_MAX, "<%s> %s:Scan Task .. end of record loop%c\n", ' ');
       }
       /* PGX: TESTING - RESTORE: slowed down scan rate
        * epicsThreadSleep(1.0/ECS_SCAN_RATE);
@@ -538,7 +541,7 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
     // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
     // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
    mask = (pmr->hsta & PWR_BIT) | (pmr->hsta & PWR_ACK_BIT);
-   Debug(DBUG_MAX, "<%s> %s:handshake word write mask %x \n", mask);
+   Debug(DBUG_FULL, "<%s> %s:handshake word write mask %x \n", mask);
    pmr->hsta = pattern | mask;
    MARK(M_HSTA);
 
@@ -1242,9 +1245,9 @@ init_record(struct ecsMotorRecord * pmr, int pass) {
    long status = 0;
 
 /* PGX: TESTING - REMOVE: force debug level */
-// pmr->dbug = DBUG_MAX;
+pmr->dbug = DBUG_FULL;
 
-   Debug(DBUG_MAX, "<%s> %s init_record pass = %d\n", pass);
+   Debug(DBUG_FULL, "<%s> %s init_record pass = %d\n", pass);
 
    /* Do nothing on the first pass */
    if (pass == 0)
@@ -1660,7 +1663,7 @@ static long process(struct ecsMotorRecord * pmr)
    if (pmr->pact)
       return (0);
 
-   Debug(DBUG_MAX, "<%s> %s:process begin%c\n", ' ');
+   Debug(DBUG_FULL, "<%s> %s:process begin%c\n", ' ');
    pmr->pact = TRUE;
 
    /* 
@@ -1673,7 +1676,7 @@ static long process(struct ecsMotorRecord * pmr)
    recordProcessType = ecsMotorRecordProcessType(pmr);
 
    if (recordProcessType == PROCESS_NORMAL) {
-     Debug(DBUG_MAX, "<%s> %s:process external process request%c\n", ' ');
+     Debug(DBUG_FULL, "<%s> %s:process external process request%c\n", ' ');
 
      /* Clear the last error and indicate that the record is busy */
      pmr->mess[0] = '\0';
@@ -1684,7 +1687,7 @@ static long process(struct ecsMotorRecord * pmr)
      /* Check input links for new operating conditions */
      status = readInputLinks (pmr);
      if (status) {
-	 Debug(DBUG_MAX, "<%s> %s:exiting after readInputs%c\n", ' ');
+	 Debug(DBUG_FULL, "<%s> %s:exiting after readInputs%c\n", ' ');
 	 pmr->pact = FALSE;	/* PGX: added to prevent a deadlock */
 	 return (status);
      }
@@ -1695,18 +1698,18 @@ static long process(struct ecsMotorRecord * pmr)
     * It was left as a separate routine because it has several return
     * calls that would break the logic if we insert the code here (PGX).
     */
-   Debug(DBUG_MAX, "<%s> %s:invoke device processing%c\n", ' ');
+   Debug(DBUG_FULL, "<%s> %s:invoke device processing%c\n", ' ');
    status = auxiliary_process(pmr, recordProcessType);
    if (status) {
      pmr->dsta = menuCarstatesERROR;
      pmr->pp = TRUE;
    }
 
-   Debug(DBUG_MAX, "<%s> %s:auxiliary processing returned %ld\n", status);
+   Debug(DBUG_FULL, "<%s> %s:auxiliary processing returned %ld\n", status);
 
    /* if Post Process request perform epics completion tasks */
    if (pmr->pp) {
-      Debug(DBUG_MAX, "<%s> %s:process: post process entry%c\n", ' ');
+      Debug(DBUG_FULL, "<%s> %s:process: post process entry%c\n", ' ');
       pmr->pp = FALSE;
 
       /* If an error was detected send the associated message, otherwise 
@@ -1743,7 +1746,7 @@ static long process(struct ecsMotorRecord * pmr)
 
    pmr->pact = FALSE;
 
-   Debug(DBUG_MAX, "<%s> %s:process end%c\n", ' ');
+   Debug(DBUG_FULL, "<%s> %s:process end%c\n", ' ');
 
    return (status);
 }
@@ -1877,7 +1880,7 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
          setTimeout (pmr, ECS_SIM_TMO);
       }
 
-   Debug(DBUG_MAX, "<%s> %s:auxiliary processing end %ld\n", status);
+   Debug(DBUG_FULL, "<%s> %s:auxiliary processing end %ld\n", status);
 
    return status;
 }
@@ -2087,7 +2090,7 @@ monitor(struct ecsMotorRecord * pmr)
 static void
 post_MARKed_fields(struct ecsMotorRecord * pmr, unsigned short mask)
 {
-   Debug(DBUG_MAX, "<%s> %s:post_MARKed_fields entry = %x\n", pmr->mmap);
+   Debug(DBUG_FULL, "<%s> %s:post_MARKed_fields entry, mmap = %x\n", pmr->mmap);
 
    if (MARKED(M_VAL)) {
       db_post_events(pmr, &pmr->val, mask);
@@ -2194,7 +2197,7 @@ static long
 initLinks (struct ecsMotorRecord * pmr) {
   long status = 0;
 
-   Debug(DBUG_MAX, "<%s> %s:initLinks: entry%c\n", ' ');
+   Debug(DBUG_FULL, "<%s> %s:initLinks: entry%c\n", ' ');
 
 #if 0
    /*
@@ -2289,7 +2292,7 @@ readInputLinks (struct ecsMotorRecord * pmr) {
   long status = 0;
   unsigned short sval;
 
-   Debug(DBUG_MAX, "<%s> %s:readInputLinks: entry%c\n", ' ');
+   Debug(DBUG_FULL, "<%s> %s:readInputLinks: entry%c\n", ' ');
 
 
 /* Here we will need to add reading the Handshake and encoder position links 
