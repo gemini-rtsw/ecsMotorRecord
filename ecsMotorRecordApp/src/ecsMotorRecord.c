@@ -543,6 +543,7 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
    mask = (pmr->hsta & PWR_BIT) | (pmr->hsta & PWR_ACK_BIT);
    Debug(DBUG_FULL, "<%s> %s:handshake word write mask %x \n", mask);
    pmr->hsta = pattern | mask;
+   pmr->pp = TRUE;
    MARK(M_HSTA);
 
 #if 0
@@ -779,8 +780,8 @@ writingState (struct ecsMotorRecord *pmr) {
 
         if (pmr->mode == MODE_VMOVE) {
 	    /* PGX: not supported */
+            Debug(DBUG_MIN, "<%s> %s:velocity word (disabled) write %d\n", impliedDecimal);
             impliedDecimal = (unsigned) (pmr->velo * pmr->vsca);
-            Debug(DBUG_MIN, "<%s> %s:velocity word write %d\n", impliedDecimal);
 #if 0
              /* Convert this to a dbPutLink()   (mdw) */
              // status = drvAbDf1WriteAnalog (pPriv->pWriteVelPriv, impliedDecimal);
@@ -793,10 +794,11 @@ writingState (struct ecsMotorRecord *pmr) {
         }
         else {
             /* this is now our raw position demand */
+            Debug(DBUG_MIN, "<%s> %s:position word write %d\n", impliedDecimal);
             impliedDecimal = (unsigned) (pmr->val * pmr->psca);
             pmr->rpos = impliedDecimal;
+            pmr->pp = TRUE;
 	    MARK(M_RPOS);
-            Debug(DBUG_MIN, "<%s> %s:position word write %d\n", impliedDecimal);
 #if 0
             /* if we decide to have an OUT link for the position demand, 
                we'll need to Convert this to a dbPutLink()   (mdw) */
