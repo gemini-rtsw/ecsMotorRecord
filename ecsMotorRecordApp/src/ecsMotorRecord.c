@@ -267,7 +267,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	/* Handle changes in the input handshake.
 	 */
 	if (pmr->hinp != pPriv->handshake) {
-	    Debug(DBUG_FULL, "<%s> %s:detected handshake change to %d\n", pmr->hinp);
+	    Debug(DBUG_FULL, "<%s> %s:detected handshake change to 0x%x\n", pmr->hinp);
 	    pPriv->handshake = pmr->hinp;
 	    inPosition = ((pmr->hinp & IN_POS_BIT) != 0);
 	    if (inPosition != pPriv->inPosition) {
@@ -296,7 +296,7 @@ static void ecsMotorRecordScanTask(void *p) {
           */
          if (pPriv->callbackFlags) {
 
-	    Debug(DBUG_FULL, "<%s> %s:detected callback flags change %x\n", pPriv->callbackFlags);
+	    Debug(DBUG_FULL, "<%s> %s:detected callback flags change 0x%x\n", pPriv->callbackFlags);
 
             /* defer processing if the record is busy */
             if (!pmr->pact) {
@@ -310,7 +310,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	       /* Update output handshake
 		*/
                if (pmr->hsta != pPriv->handshake) {
-		    Debug(DBUG_FULL, "<%s> %s:setting hsta:%d\n", pPriv->handshake);
+		    Debug(DBUG_FULL, "<%s> %s:setting hsta:0x%x\n", pPriv->handshake);
                     pmr->hsta = pPriv->handshake;
                     MARK(M_HSTA);
                }
@@ -360,7 +360,7 @@ PGX: only need to mark
       /* PGX: TESTING - RESTORE: slowed down scan rate
        * epicsThreadSleep(1.0/ECS_SCAN_RATE);
        */
-      epicsThreadSleep(10.0);
+      epicsThreadSleep(1.0);
    }
 }
 
@@ -532,7 +532,7 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
    long status = S_ECS_OK;
    unsigned int mask;
 
-    Debug(DBUG_FULL, "<%s> %s:handshake word write %x \n", pattern);
+   Debug(DBUG_FULL, "<%s> %s:handshake word write 0x%x\n", pattern);
 
    if (pmr->dmov)
        pattern |= IN_POS_BIT;
@@ -540,9 +540,16 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
     /* Change this to a dbPutLink (mdw) */
     // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
     // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
-   mask = (pmr->hsta & PWR_BIT) | (pmr->hsta & PWR_ACK_BIT);
-   Debug(DBUG_FULL, "<%s> %s:handshake word write mask %x \n", mask);
+
+   /* The mask is used to prevent the ecsMotor record from overwting bits that are
+    * set by the PLC. It doesn't matter when using the software with the real PLC,
+    * but it's a problem with the simulator, and it's wrong anyway (PGX).
+    */
+   mask = (pmr->hsta & PWR_BIT)     | (pmr->hsta & PWR_ACK_BIT) |
+          (pmr->hsta & POS_ACK_BIT) | (pmr->hsta & DRV_ACK_BIT);
+
    pmr->hsta = pattern | mask;
+   Debug(DBUG_FULL, "<%s> %s:handshake written 0x%x\n", pmr->hsta);
    pmr->pp = TRUE;
    MARK(M_HSTA);
 
@@ -734,7 +741,7 @@ static long poweringState (struct ecsMotorRecord *pmr) {
 static long
 writingState (struct ecsMotorRecord *pmr) {
     //ecsMotorRecordPriv *pPriv = pmr->dpvt;
-    unsigned impliedDecimal;
+    unsigned impliedDecimal = 0;
     long status = S_ECS_OK;
 
     Debug(DBUG_FULL, "<%s> %s:writingState%c\n", ' ');
