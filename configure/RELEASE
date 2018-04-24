@@ -27,12 +27,10 @@ EPICS_RELEASE=R3.14.12.7
 
 PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
 WORK_SUPP=/gem_sw/work/$(EPICS_RELEASE)/support
-#TEST_SUPP=/home/mrippa/work/$(EPICS_RELEASE)/support
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
-# If using the sequencer, point SNCSEQ at its top directory:
-#SNCSEQ = $(MODULES)/seq-ver
-GEMREC=/gem_sw/prod/R3.14.12.7/support/geminiRec/4-1-6
+# Depends on geminiRec for the CAR definitions
+GEMREC=$(PROD_SUPP)/geminiRec/4-1-6
 
 # EPICS_BASE should appear last so earlier modules can override stuff:
 EPICS_BASE = /gem_sw/epics/$(EPICS_RELEASE)/base
