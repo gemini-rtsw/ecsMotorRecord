@@ -24,10 +24,11 @@ port -260 96 100 1792 PositionFeedback symbol 1 -272 80 0
 uniq 27
 [tools]
 [attributes]
-p -165 66 100 0 -1 set0:top $(top)
-p -165 18 100 0 -1 set1:dev dev
-p -168 -27 100 0 -1 set2:dtyp dtyp
-p -167 -68 100 0 -1 set3:vms 0
+p -168 60 100 0 -1 set0:top $(top)
+p -168 30 100 0 -1 set1:dev dev
+p -168 -30 100 0 -1 set2:dtyp dtyp
+p -168 -60 100 0 -1 set3:vms 0
+p -168 0 100 0 -1 set4:motor motor
 [layers]
 <symbol>
 l 100 0 0 -160 144 ECS Motor Control

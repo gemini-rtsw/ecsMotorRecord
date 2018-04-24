@@ -12,7 +12,7 @@ w 2232 3331 100 0 n#7 elongouts.elongouts#8.FLNK 2096 3328 2368 3328 outhier.Fli
 w 2232 3267 100 0 n#8 elongouts.elongouts#8.OUT 2096 3264 2368 3264 outhier.HandshakeOutput.p
 w 1112 2387 100 0 n#9 ecalcs.ecalcs#42.INPA 1168 2384 1056 2384 1056 2432 1488 2432 1488 2192 1456 2192 ecalcs.ecalcs#42.VAL
 w 2128 3107 100 0 n#10 elongouts.elongouts#10.FLNK 2096 3104 2160 3104 2160 3152 1760 3152 1760 3296 1840 3296 elongouts.elongouts#8.SLNK
-w 1584 2229 100 0 n#11 ecalcs.ecalcs#42.FLNK 1456 2224 1712 2224 1712 3072 1840 3072 elongouts.elongouts#10.SLNK
+w 1584 2227 100 0 n#11 ecalcs.ecalcs#42.FLNK 1456 2224 1712 2224 1712 3072 1840 3072 elongouts.elongouts#10.SLNK
 w 28 3315 100 0 n#12 inhier.HandshakeInput.P -24 3312 80 3312 elongins.elongins#5.INP
 w 828 3795 100 0 n#13 inhier.Mode.P 520 3792 1136 3792 1136 3328 1144 3328 eecsmotor.eecsmotor#45.MODE
 w 848 3267 100 0 n#14 elongouts.elongouts#50.OUT 800 3264 896 3264 896 3192 1144 3192 eecsmotor.eecsmotor#45.HINP
@@ -38,7 +38,9 @@ w 792 2515 100 0 n#33 ecalcs.ecalcs#46.FLNK 464 2512 1120 2512 1120 2992 1144 29
 w 440 3507 100 0 n#34 elongins.elongins#47.FLNK 336 3504 544 3504 elongouts.elongouts#49.SLNK
 w 376 3475 100 0 n#35 elongins.elongins#47.VAL 336 3472 416 3472 416 3536 544 3536 elongouts.elongouts#49.DOL
 w 864 3475 100 0 n#36 elongouts.elongouts#49.OUT 800 3472 928 3472 928 3232 1144 3232 eecsmotor.eecsmotor#45.PDFB
-w -14 3522 -100 0 n#37 inhier.PositionFeedback.P -32 3520 80 3520 elongins.elongins#47.INP
+w 24 3523 100 0 n#37 inhier.PositionFeedback.P -32 3520 80 3520 elongins.elongins#47.INP
+s 1196 3534 100 0 The macro motor was introduced to preserve the old motor names
+s 1196 3510 100 0 It could not be used as the root of the rest of the records because of name length constrains
 [cell use]
 use bc200tr -424 1560 100 0 bc200tr#39
 xform 0 1256 2840
@@ -106,7 +108,7 @@ use inhier 367 3736 100 0 Position
 xform 0 520 3744
 use eecsmotor 1144 2952 100 0 eecsmotor#45
 xform 0 1304 3160
-p 1211 2952 100 1024 1 name:$(top)$(dev)motor
+p 1211 2952 100 1024 1 name:$(top)$(motor)motor
 p 1213 2925 100 0 1 VMS:$(vms)
 use ecalcs 176 2224 100 0 ecalcs#46
 xform 0 320 2464
