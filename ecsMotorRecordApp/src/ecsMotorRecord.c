@@ -1253,8 +1253,10 @@ init_record(struct ecsMotorRecord * pmr, int pass) {
    ecsMotorRecordPriv *pPriv;
    long status = 0;
 
+#if 0
 /* PGX: TESTING - REMOVE: force debug level */
 pmr->dbug = DBUG_FULL;
+#endif
 
    Debug(DBUG_FULL, "<%s> %s init_record pass = %d\n", pass);
 
@@ -1790,8 +1792,8 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
 
    /*
    PGX: TESTING - RESTORE: disabled simulation for now
-   if (processSimulation (pmr, recordProcessType)) return status;
    */
+   if (processSimulation (pmr, recordProcessType)) return status;
 
    /* Internal callbacks and control buttons get handled here */
    if (recordProcessType == PROCESS_INTERNAL || recordProcessType == PROCESS_BUTTON) {
