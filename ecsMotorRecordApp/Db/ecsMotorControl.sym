@@ -10,7 +10,7 @@ port -240 -336 100 1792 Slink symbol 1 -272 -352 0
 port -260 48 100 1792 HandshakeInput symbol 1 -272 32 0
 port -240 0 100 1792 Encoder symbol 1 -272 -16 0
 port 76 144 100 1792 Response symbol 2 112 128 0
-port 100 96 100 1792 HandshakeOutput symbol 2 112 80 0
+port 100 96 100 1792 NewPosition symbol 2 112 80 0
 port 96 48 100 1792 Message symbol 2 112 32 0
 port 96 -96 100 1792 DevPosn symbol 2 112 -112 0
 port 96 -144 100 1792 InPosn symbol 2 112 -160 0
@@ -19,7 +19,7 @@ port 96 -240 100 1792 ULimit symbol 2 112 -256 0
 port 96 -288 100 1792 LLimit symbol 2 112 -304 0
 port 96 -336 100 1792 Flink symbol 2 112 -352 0
 port 96 0 100 1792 PositionDemand symbol 2 112 -16 0
-port 96 -48 100 1792 VelocityDemand symbol 2 112 -64 0
+port 96 -48 100 1792 DriveEnable symbol 2 112 -64 0
 port -260 96 100 1792 PositionFeedback symbol 1 -272 80 0
 uniq 27
 [tools]

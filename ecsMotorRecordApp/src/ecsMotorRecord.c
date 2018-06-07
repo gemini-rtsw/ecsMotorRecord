@@ -186,7 +186,9 @@ typedef struct {
     double       simTarget;             /* simulation mode position target */
     double       simVelocity;           /* simulation mode velocity */
     double       simPosition;           /* simulation mode device position */
-    unsigned     handshake;             /* latest handshake word */
+    //unsigned     handshake;           /* latest handshake word */
+    unsigned     handshake_in;          /* latest handshake word */
+    unsigned     handshake_out;             /* latest handshake word */
     unsigned     encoder;               /* latest encoder position */
     unsigned     fault;                 /* latest fault condition */
     short        inPosition;            /* latest in-position state */
@@ -207,6 +209,8 @@ static long verifyingState (struct ecsMotorRecord *);
 static long checkFaultState (struct ecsMotorRecord *);
 static long failingState (struct ecsMotorRecord *);
 
+static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
+static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
 
 /*
 * Function ecsMotorRecordScanTask
@@ -266,28 +270,41 @@ static void ecsMotorRecordScanTask(void *p) {
 
 	/* Handle changes in the input handshake.
 	 */
-	if (pmr->hinp != pPriv->handshake) {
-	    Debug(DBUG_FULL, "<%s> %s:detected handshake change to 0x%x\n", pmr->hinp);
-	    pPriv->handshake = pmr->hinp;
+	if (pmr->hinp != pPriv->handshake_in) {
+	    Debug(DBUG_FULL, "<%s> %s:detected hinp change from 0x%x\n", pPriv->handshake_in);
+	    Debug(DBUG_FULL, "<%s> %s:detected hinp change to 0x%x\n", pmr->hinp);
+	    pPriv->handshake_in = pmr->hinp;
 	    inPosition = ((pmr->hinp & IN_POS_BIT) != 0);
 	    if (inPosition != pPriv->inPosition) {
 		pPriv->inPosition = inPosition;
 	    }
+	    setHandshakeBits(pmr, pmr->hinp);
 	    pPriv->callbackFlags |= DATA_READ;
+	    MARK(M_HINP);
 	}
 
-	/* Handle changes in the encoder.
+	/* Handle changes in the output handshake.
 	 */
+       if (pmr->hsta != pPriv->handshake_out) {
+	    Debug(DBUG_FULL, "<%s> %s:detected hsta change to 0x%x\n", pmr->hsta);
+	    pPriv->handshake_out = pmr->hsta;
+	    pPriv->callbackFlags |= DATA_WRITE;
+	    MARK(M_HSTA);
+       }
+
+	/* Handle changes in the encoder.
 	if (pmr->rrbv != pPriv->encoder) {
 	    Debug(DBUG_FULL, "<%s> %s:detected encoder change to %d\n", pmr->rrbv);
 	    pPriv->encoder = pmr->rrbv;
 	    pPriv->callbackFlags |= DATA_READ;
 	}
+	 */
 
 	/* Handle changes in the position demand feedback.
 	 */
 	if (pmr->msta == MOTOR_WRITING && (pmr->pdfb == pmr->rpos)) {
 	    pPriv->callbackFlags |= DATA_WRITE;
+	    MARK(M_PDFB);
 	}
 
          /* if an asynchronous callback has occurred since the
@@ -307,13 +324,15 @@ static void ecsMotorRecordScanTask(void *p) {
                if (pPriv->callbackFlags & TIMEOUT_OVER) MARK(M_TIMEOUT);
                if (pPriv->callbackFlags & DATA_ERROR) MARK(M_ERROR);
 
+#if 0
 	       /* Update output handshake
 		*/
-               if (pmr->hsta != pPriv->handshake) {
-		    Debug(DBUG_FULL, "<%s> %s:setting hsta:0x%x\n", pPriv->handshake);
-                    pmr->hsta = pPriv->handshake;
+               if (pmr->hsta != pPriv->handshake_out) {
+		    Debug(DBUG_FULL, "<%s> %s:setting hsta:0x%x\n", pPriv->handshake_out);
+                    pmr->hsta = pPriv->handshake_out;
                     MARK(M_HSTA);
                }
+#endif
 #if 0
                if (pmr->rrbv != pPriv->encoder) {
                   pmr->rrbv = pPriv->encoder;
@@ -522,6 +541,57 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
 }
 
 /*
+ * Function setHandshakeBits
+ * 
+ * Set one or more bits in the output handshake.
+ *
+ */
+static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
+{
+    unsigned int mask;
+
+    Debug(DBUG_FULL, "<%s> %s:setHandshakeBits pattern=0x%x\n", pattern);
+
+    if (pmr->vms)
+	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT | VEL_ACK_BIT);
+    else
+	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT);
+
+    pmr->hsta = pmr->hinp | (pattern & ~mask);
+    pmr->pp = TRUE;
+    MARK(M_HSTA);
+
+    Debug(DBUG_FULL, "<%s> %s:setHandshakeBits hsta=0x%x\n", pmr->hsta);
+    //printf ("setHandshake: p=0x%x, m=0x%x, i=0x%x, o=0x%x\n", pattern, mask, pmr->hinp, pmr->hsta);
+}
+
+/*
+ * Function resetHandshakeBits
+ * 
+ * Reset (clear) one or more bits in the output handshake.
+ *
+ */
+static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
+{
+    unsigned int mask;
+
+    Debug(DBUG_FULL, "<%s> %s:resetHandshakeBits pattern=0x%x\n", pattern);
+
+    if (pmr->vms)
+	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT | VEL_ACK_BIT);
+    else
+	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT);
+
+    pmr->hsta = pmr->hinp & (~pattern | mask);
+    pmr->pp = TRUE;
+    MARK(M_HSTA);
+
+    Debug(DBUG_FULL, "<%s> %s:resetHandshakeBits hsta=0x%x\n", pmr->hsta);
+    //printf ("resetHandshake: p=0x%x, m=0x%x, i=0x%x, o=0x%x\n", pattern, mask, pmr->hinp, pmr->hsta);
+}
+
+#if 0
+/*
  * Function writeHandshake
  * 
  * Write a new handshake pattern to the AB PLC.
@@ -553,14 +623,9 @@ static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
    pmr->pp = TRUE;
    MARK(M_HSTA);
 
-#if 0
-/* no longer needed PGX */
-   if (status) {
-      recordError (pmr, "ECS handshake write failure", status);
-   }
-#endif
    return (status);
 }
+#endif
 
 /*
  * Function checkFaultState
@@ -706,8 +771,14 @@ static long poweringState (struct ecsMotorRecord *pmr) {
       pmr->msta = MOTOR_POWERING;
       MARK(M_MSTA);
 
+#if 0
       if (pmr->hsta != (PWR_BIT | PWR_ACK_BIT)) {
          writeHandshake (pmr, PWR_BIT);
+         setTimeout (pmr, ECS_PWR_TMO);
+      }
+#endif
+      if (pmr->hinp != (PWR_BIT | PWR_ACK_BIT)) {
+	 setHandshakeBits (pmr, PWR_BIT);
          setTimeout (pmr, ECS_PWR_TMO);
       }
    }
@@ -719,7 +790,12 @@ static long poweringState (struct ecsMotorRecord *pmr) {
    }
 
    /* Wait for a power on acknowledge */
+#if 0
    if (pmr->hsta != (PWR_BIT | PWR_ACK_BIT)) {
+      return (S_ECS_OK);
+   }
+#endif
+   if (pmr->hinp != (PWR_BIT | PWR_ACK_BIT)) {
       return (S_ECS_OK);
    }
 
@@ -745,8 +821,6 @@ writingState (struct ecsMotorRecord *pmr) {
     long status = S_ECS_OK;
 
     Debug(DBUG_FULL, "<%s> %s:writingState%c\n", ' ');
-
-    // tempLog4 ("writingState %s: mode=%d, dmov=%d, movn=%d\n", pmr->name, pmr->mode, pmr->dmov, pmr->movn);
 
     /* 
      * If we are stationary and in position then do not
@@ -820,7 +894,7 @@ writingState (struct ecsMotorRecord *pmr) {
         return status;
     }
 
-    /* If the timeout has expired regester a fault */
+    /* If the timeout has expired register a fault */
     if (MARKED(M_TIMEOUT)) {
         status = recordError (pmr, "Vel/Pos write failure", S_ECS_TIMEOUT);
         return status;
@@ -830,7 +904,8 @@ writingState (struct ecsMotorRecord *pmr) {
     if (!(MARKED(M_WRITE))) return status;
 
     /* Value has been written, set the validation bit */
-    writeHandshake (pmr, pmr->hsta | ((pmr->mode == MODE_VMOVE) ? NEW_VEL_BIT : NEW_POS_BIT));
+    //writeHandshake (pmr, pmr->hsta | ((pmr->mode == MODE_VMOVE) ? NEW_VEL_BIT : NEW_POS_BIT));
+    setHandshakeBits (pmr, NEW_POS_BIT);
     setTimeout (pmr, ECS_WRITE_TMO);
 
     /* and proceed to the validation state */
@@ -865,14 +940,19 @@ verifyingState (struct ecsMotorRecord *pmr) {
     if (MARKED(M_TIMEOUT)) {
             Debug(DBUG_MIN, "<%s> %s:Value rejected%c\n", ' ');
         status = recordError (pmr, "Value not accepted!", S_ECS_VALUE_REJECT);
-        writeHandshake (pmr, pmr->hsta &
-                ((pmr->mode == MODE_VMOVE) ? ~NEW_VEL_BIT : ~NEW_POS_BIT));
+        // writeHandshake (pmr, pmr->hsta & ((pmr->mode == MODE_VMOVE) ? ~NEW_VEL_BIT : ~NEW_POS_BIT));
+        resetHandshakeBits (pmr, NEW_POS_BIT);
         status = (pmr->mip == MIP_STOPPED) ? idleState(pmr) : movingState(pmr);
         return (status);
     }
 
     /* Otherwise keep waiting for acknowledgement */
+#if 0
     if (!(pmr->hsta & ((pmr->mode == MODE_VMOVE) ? VEL_ACK_BIT : POS_ACK_BIT))) {
+         return (status);
+    }
+#endif
+    if (!(pmr->hinp & ((pmr->mode == MODE_VMOVE) ? VEL_ACK_BIT : POS_ACK_BIT))) {
          return (status);
     }
 
@@ -899,16 +979,28 @@ startingState (struct ecsMotorRecord *pmr) {
     /* Upon entry enable the drive if it is not already on */
     Debug(DBUG_FULL, "<%s> %s:startingState%c\n", ' ');
 
+    /* Clear the new position bit. This is necessary because the new driver
+     * keeps updating this bit and competing with the PLC.
+     */
+    resetHandshakeBits (pmr, NEW_POS_BIT);
+
     if (pmr->msta != MOTOR_STARTING) {
         pmr->msta = MOTOR_STARTING;
         MARK(M_MSTA);
 
+#if 0
         if (!(pmr->hsta & PWR_ACK_BIT)) {
             status = recordError (pmr, "Unexpected drive powerdown", S_ECS_HSK_SYNC);
             return (status);
         }
+#endif
+        if (!(pmr->hinp & PWR_ACK_BIT)) {
+            status = recordError (pmr, "Unexpected drive powerdown", S_ECS_HSK_SYNC);
+            return (status);
+        }
 
-        writeHandshake (pmr, DRV_BIT | (pmr->hsta & DRV_ACK_BIT));
+        //writeHandshake (pmr, DRV_BIT | (pmr->hsta & DRV_ACK_BIT));
+        setHandshakeBits (pmr, DRV_BIT);
         setTimeout (pmr, ECS_PVOK_TMO);
         return (S_ECS_OK);
     }
@@ -919,10 +1011,16 @@ startingState (struct ecsMotorRecord *pmr) {
         return status;
     }
 
+#if 0
     /* Wait for motor to start */
     if (!(pmr->hsta & DRV_ACK_BIT)) {
         return (S_ECS_OK);
       }
+#endif
+    /* Wait for motor to start */
+    if (!(pmr->hinp & DRV_ACK_BIT)) {
+        return (S_ECS_OK);
+    }
 
     /* Drive is enabled succesfully, go on to moving state */
     setTimeout (pmr, TIMEOUT_OFF);
@@ -962,7 +1060,15 @@ movingState (struct ecsMotorRecord *pmr) {
       pmr->stop = 0;
       status = stoppingState(pmr);
     }
+#if 0
     else if (!(pmr->hsta & DRV_ACK_BIT)) {
+        status = stoppingState (pmr);
+        if (pmr->mode != MODE_PARK) {
+            status = recordError (pmr, "PLC has disabled drive, motion failed", S_ECS_HSK_SYNC);
+        }
+    }
+#endif
+    else if (!(pmr->hinp & DRV_ACK_BIT)) {
         status = stoppingState (pmr);
         if (pmr->mode != MODE_PARK) {
             status = recordError (pmr, "PLC has disabled drive, motion failed", S_ECS_HSK_SYNC);
@@ -984,8 +1090,6 @@ stoppingState (struct ecsMotorRecord *pmr) {
 
     Debug(DBUG_FULL, "<%s> %s:stoppingState%c\n", ' ');
 
-    // tempLog4 ("stoppingState %s: mode=%d, msta=%d, hsta=%x\n", pmr->name, pmr->mode, pmr->msta, pmr->hsta);
-
     /* Disable drive on entry. Make sure that the drive is disabled
      * either when the drive enable or the drive acknowledge bits are
      * zero. This is because the PLC can disable the drive is a limit
@@ -999,8 +1103,15 @@ stoppingState (struct ecsMotorRecord *pmr) {
 #if 0
         if (pmr->hsta & DRV_ACK_BIT) {  /* OLD */
 #endif
+#if 0
         if ((pmr->hsta & DRV_BIT) || (pmr->hsta & DRV_ACK_BIT)) {
             status = writeHandshake (pmr, pmr->hsta & ~DRV_BIT);
+            setTimeout (pmr, ECS_STOP_TMO);
+            return status;
+        }
+#endif
+        if ((pmr->hinp & DRV_BIT) || (pmr->hinp & DRV_ACK_BIT)) {
+            resetHandshakeBits (pmr, DRV_BIT);
             setTimeout (pmr, ECS_STOP_TMO);
             return status;
         }
@@ -1013,7 +1124,12 @@ stoppingState (struct ecsMotorRecord *pmr) {
     }
 
     /* Wait for drive to be disabled */
+#if 0
     if (pmr->hsta & DRV_ACK_BIT) {
+        return (status);
+    }
+#endif
+    if (pmr->hinp & DRV_ACK_BIT) {
         return (status);
     }
 
@@ -1076,10 +1192,8 @@ depoweringState (struct ecsMotorRecord *pmr) {
 
     // tempLog2 ("depoweringState %s: shutting power off %x\n", pmr->name,  pmr->hsta & ~PWR_BIT);
 
-#if 0
-        writeHandshake (pmr, pmr->hsta & ~PWR_BIT);     /* OLD */
-#endif
-        writeHandshake (pmr, pmr->hsta & (~DRV_BIT & ~PWR_BIT));
+        //writeHandshake (pmr, pmr->hsta & (~DRV_BIT & ~PWR_BIT));
+        resetHandshakeBits (pmr, DRV_BIT | PWR_BIT);
         setTimeout (pmr, ECS_PWR_TMO);
         return status;
     }
@@ -1091,7 +1205,12 @@ depoweringState (struct ecsMotorRecord *pmr) {
     }
 
     /* Wait for power to shut down */
+#if 0
     if (pmr->hsta) {
+        return (status);
+    }
+#endif
+    if (pmr->hinp) {
         return (status);
     }
 
@@ -1124,7 +1243,8 @@ failingState (struct ecsMotorRecord *pmr) {
    // tempLog2 ("failingState %s: hsta=%x\n", pmr->name, pmr->hsta);
 
    /* shut down any move in progress */
-   writeHandshake (pmr, pmr->hsta & ~DRV_BIT);
+   // writeHandshake (pmr, pmr->hsta & ~DRV_BIT);
+   resetHandshakeBits (pmr, DRV_BIT);
 
    /* drive has stopped due to a serious fault, indicate this */
    pmr->val = pPriv->currentTarget = pmr->mpos;
@@ -1221,6 +1341,9 @@ static long processInitialize (struct ecsMotorRecord *pmr) {
    status = checkFaultState (pmr);
    if (status) return status;
 
+   /* reset new position and drive enable bits */
+   resetHandshakeBits (pmr, NEW_POS_BIT | DRV_BIT);
+
    pmr->dsta = menuCarstatesBUSY;
    MARK(M_DSTA);
    pmr->mip = MIP_OFFLINE;
@@ -1252,11 +1375,6 @@ init_record(struct ecsMotorRecord * pmr, int pass) {
    // struct ecsMotorDset *pdset = (struct ecsMotorDset *) (pmr->dset);
    ecsMotorRecordPriv *pPriv;
    long status = 0;
-
-#if 0
-/* PGX: TESTING - REMOVE: force debug level */
-pmr->dbug = DBUG_FULL;
-#endif
 
    Debug(DBUG_FULL, "<%s> %s init_record pass = %d\n", pass);
 
@@ -1339,7 +1457,9 @@ pmr->dbug = DBUG_FULL;
    pPriv->operatingMode = NORMAL_MODE;
    pPriv->currentMode = MODE_STOP;
    pPriv->currentTarget= 0;
-   pPriv->handshake = 0;
+   //pPriv->handshake = 0;
+   pPriv->handshake_in = 0;
+   pPriv->handshake_out = 0;
    pPriv->encoder = 0;
    pPriv->fault = 0;
    pPriv->inPosition = 0;
@@ -1446,8 +1566,23 @@ processSimulation (struct ecsMotorRecord *pmr, long processType) {
       MARK(M_MPOS);
 
       /* if power is off insure that device is offline */
+#if 0
       if (!(pmr->hsta & PWR_ACK_BIT)) {
         writeHandshake (pmr, pmr->hsta & ~DRV_BIT);
+        pmr->val = pPriv->currentTarget = pmr->mpos;
+        MARK(M_VAL);
+        pmr->mode = MODE_STOP;
+        MARK(M_MODE);
+        pmr->mip = MIP_OFFLINE;
+        MARK(M_MIP);
+        pmr->msta = MOTOR_OFF;
+        MARK(M_MSTA);
+        pmr->pp = TRUE;
+        return TRUE;
+      }
+#endif
+      if (!(pmr->hinp & PWR_ACK_BIT)) {
+        resetHandshakeBits (pmr, DRV_BIT);
         pmr->val = pPriv->currentTarget = pmr->mpos;
         MARK(M_VAL);
         pmr->mode = MODE_STOP;
@@ -1747,6 +1882,7 @@ static long process(struct ecsMotorRecord * pmr)
       status = dbPutLink (&(pmr->dstl), DBR_LONG, &(pmr->dsta), nRequest);
 
       /* fire off the forward link and record the time */
+      Debug(DBUG_FULL, "<%s> %s:firing forward link%c\n", ' ');
       recGblFwdLink(pmr);   
       recGblGetTimeStamp(pmr);
    }   
@@ -2194,6 +2330,14 @@ post_MARKed_fields(struct ecsMotorRecord * pmr, unsigned short mask)
    if (MARKED(M_RPOS)) {
       db_post_events(pmr, &pmr->rpos, mask);
       UNMARK(M_MDBD);
+   }
+   if (MARKED(M_HINP)) {
+      db_post_events(pmr, &pmr->hinp, mask);
+      UNMARK(M_HINP);
+   }
+   if (MARKED(M_PDFB)) {
+      db_post_events(pmr, &pmr->pdfb, mask);
+      UNMARK(M_PDFB);
    }
 
    UNMARK_ALL;
