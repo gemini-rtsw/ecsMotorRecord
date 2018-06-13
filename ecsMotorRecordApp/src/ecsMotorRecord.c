@@ -202,8 +202,10 @@ static long idleState (struct ecsMotorRecord *);
 static long startingState (struct ecsMotorRecord *);
 static long movingState (struct ecsMotorRecord *);
 static long stoppingState (struct ecsMotorRecord *);
+/* not used any more (pgx)
 static long poweringState (struct ecsMotorRecord *);
 static long depoweringState (struct ecsMotorRecord *);
+*/
 static long writingState (struct ecsMotorRecord *);
 static long verifyingState (struct ecsMotorRecord *);
 static long checkFaultState (struct ecsMotorRecord *);
@@ -211,6 +213,22 @@ static long failingState (struct ecsMotorRecord *);
 
 static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
 static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
+static double positionFromEncoder(struct ecsMotorRecord *pmr);
+
+/* Function positionFromEncoder
+ *
+ * Calculate the device position limiting the raw encoder value to less than 60000
+ * counts (negative values in the PLC side) to prevent problems when the encoders
+ * go below zero. This is needed to avoid problems with the high level systems
+ * (e.g. TCS). The scaling factor is applied at this point as well.
+ */
+static double positionFromEncoder(struct ecsMotorRecord *pmr)
+{
+    long limval;
+
+    limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
+    return (double) limval / pmr->psca;
+}
 
 /*
 * Function ecsMotorRecordScanTask
@@ -293,12 +311,13 @@ static void ecsMotorRecordScanTask(void *p) {
        }
 
 	/* Handle changes in the encoder.
+	 */
 	if (pmr->rrbv != pPriv->encoder) {
 	    Debug(DBUG_FULL, "<%s> %s:detected encoder change to %d\n", pmr->rrbv);
 	    pPriv->encoder = pmr->rrbv;
 	    pPriv->callbackFlags |= DATA_READ;
+            MARK(M_RRBV);
 	}
-	 */
 
 	/* Handle changes in the position demand feedback.
 	 */
@@ -349,9 +368,12 @@ PGX: only need to mark
                   MARK(M_RRBV);
                }
 #endif
+
+#if 0
                if (pmr->rrbv != pPriv->encoder) {
                   MARK(M_RRBV);
                }
+#endif
 
                if (!pmr->simm && pmr->dmov != pPriv->inPosition) {
                   pmr->dmov = pPriv->inPosition;
@@ -748,9 +770,12 @@ static long idleState (struct ecsMotorRecord *pmr) {
    return (status);
 }
 
+#if 0
 /*
  * Function poweringState
  * 
+ * This routine is not used any more. The code was left here for reference (pgx)
+ *
  * A power up request has been received.  If the motor
  * power is off then turn it back on and wait for the power
  * on acknowledge to be detected.  The acknowledge
@@ -805,6 +830,7 @@ static long poweringState (struct ecsMotorRecord *pmr) {
    status = idleState (pmr);
    return (status);
 }
+#endif
 
 /*
  * Function writingState
@@ -1169,10 +1195,13 @@ stoppingState (struct ecsMotorRecord *pmr) {
     return (status);
 }
 
+#if 0
 /*
  * Function depoweringState
  * 
  * A power-down request has been recived.  Shut off drive power.
+ *
+ * This routine is not used any more. The code was left here for reference (pgx)
  */
 static long
 depoweringState (struct ecsMotorRecord *pmr) {
@@ -1227,6 +1256,7 @@ depoweringState (struct ecsMotorRecord *pmr) {
     pmr->pp = TRUE;
     return status;
 }
+#endif
 
 /*
  * Function failingState
@@ -1293,7 +1323,7 @@ static long processStateChange (struct ecsMotorRecord *pmr) {
                                 S_ECS_VALUE_REJECT);
          break;
       case MOTOR_POWERING:
-         status = poweringState (pmr);
+         /* status = poweringState (pmr); not used any more (pgx) */
          break;
       case MOTOR_IDLE:
          status = idleState (pmr);
@@ -1314,7 +1344,7 @@ static long processStateChange (struct ecsMotorRecord *pmr) {
          status = stoppingState (pmr);
          break;
       case MOTOR_DEPOWERING:
-         status = depoweringState (pmr);
+         /* status = depoweringState (pmr); not used any more (pgx) */
          break;
       case MOTOR_FAILING:
          status = failingState (pmr);
@@ -1834,7 +1864,7 @@ static long process(struct ecsMotorRecord * pmr)
      status = readInputLinks (pmr);
      if (status) {
 	 Debug(DBUG_FULL, "<%s> %s:exiting after readInputs%c\n", ' ');
-	 pmr->pact = FALSE;	/* PGX: added to prevent a deadlock */
+	 pmr->pact = FALSE;	/* pgx: added to prevent a deadlock */
 	 return (status);
      }
    }
@@ -1842,7 +1872,7 @@ static long process(struct ecsMotorRecord * pmr)
    /*
     * Now call what it used to be the device support process routine.
     * It was left as a separate routine because it has several return
-    * calls that would break the logic if we insert the code here (PGX).
+    * calls that would break the logic if we insert the code here (pgx).
     */
    Debug(DBUG_FULL, "<%s> %s:invoke device processing%c\n", ' ');
    status = auxiliary_process(pmr, recordProcessType);
@@ -1911,7 +1941,6 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
 {
     ecsMotorRecordPriv *pPriv = pmr->dpvt;
     long status = S_ECS_OK;
-    long limval;
 
    Debug(DBUG_FULL, "<%s> %s:auxiliary_process:entry%c\n", ' ');
 
@@ -1921,14 +1950,10 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
     * limited (see comment below) (PG 16/Jul/99).
     */
    if (pmr->mode == MODE_RESET) {
-      limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
-      pmr->mpos = (double) limval / pmr->psca;
+      pmr->mpos = positionFromEncoder(pmr);
       MARK(M_MPOS);
    }
 
-   /*
-   PGX: TESTING - RESTORE: disabled simulation for now
-   */
    if (processSimulation (pmr, recordProcessType)) return status;
 
    /* Internal callbacks and control buttons get handled here */
@@ -1941,8 +1966,7 @@ long auxiliary_process(struct ecsMotorRecord *pmr, long recordProcessType)
        * systems, specifically the TCS (PG 16/Jul/99).
        */
       if (MARKED(M_RRBV)) {
-         limval = (pmr->rrbv > 60000) ? 0 : pmr->rrbv;
-          pmr->mpos = (double) limval / pmr->psca;
+	  pmr->mpos = positionFromEncoder(pmr);
           MARK(M_MPOS);
       }
 
