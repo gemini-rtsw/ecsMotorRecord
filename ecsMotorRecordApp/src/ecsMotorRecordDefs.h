@@ -63,7 +63,7 @@
 #define ECS_OVER_LSW     	   3
  
 /* Background task scan rate in scans/second */
-#define ECS_SCAN_RATE		5
+#define ECS_SCAN_RATE		5	/* 0.2 seconds per scan */
 
 /* Define the internal simulation mode velocity (units/second) */
 #define ECS_SIM_VEL		1.0
@@ -171,8 +171,8 @@ field to all listeners.  monitor() does this.
 
 #define TIMEOUT_OFF    	0                      /* cancel the tiemout timer */
 #define ECS_PWR_TMO    	30 * ECS_SCAN_RATE     /* max PWR on/off to PWR_ACK on/off */
-#define ECS_WRITE_TMO  	5 * ECS_SCAN_RATE      /* max time for value write callback */
-#define ECS_PVOK_TMO   	5 * ECS_SCAN_RATE      /* max time NEW_POS/VEL to POS/VEL_ACK */
+#define ECS_WRITE_TMO  	5  * ECS_SCAN_RATE     /* max time for value write callback */
+#define ECS_PVOK_TMO   	5  * ECS_SCAN_RATE     /* max time NEW_POS/VEL to POS/VEL_ACK */
 #define ECS_STOP_TMO   	10 * ECS_SCAN_RATE     /* max time DRV off to DRV_ACK off */
 #define ECS_START_TMO  	10 * ECS_SCAN_RATE     /* max time DRV on to DRV_ACK on */
 #define ECS_SIM_TMO     ECS_SCAN_RATE / 2      /* VSM mode busy time */
