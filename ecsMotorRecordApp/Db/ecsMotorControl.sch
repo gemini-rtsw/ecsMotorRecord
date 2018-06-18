@@ -26,26 +26,26 @@ w 1524 3059 100 0 n#21 eecsmotor.eecsmotor#45.HLS 1464 3056 1584 3056 1584 2464 
 w 1508 3027 100 0 n#22 eecsmotor.eecsmotor#45.LLS 1464 3024 1552 3024 1552 2384 2368 2384 outhier.LLimit.p
 w 740 3699 100 0 n#23 inhier.Tolerance.P 520 3696 960 3696 960 3264 1144 3264 eecsmotor.eecsmotor#45.MDBD
 w 1500 3283 100 0 n#24 eecsmotor.eecsmotor#45.MSGL 1464 3280 1536 3280 1536 3392 2368 3392 outhier.Message.p
-w 1476 2995 100 0 n#25 eecsmotor.eecsmotor#45.FLNK 1464 2992 1488 2992 1488 2464 1024 2464 1024 2000 1168 2000 ecalcs.ecalcs#42.SLNK
-w 92 2291 100 0 n#26 inhier.Slink.P 8 2288 176 2288 ecalcs.ecalcs#46.SLNK
-w 480 2483 100 0 n#27 ecalcs.ecalcs#46.VAL 464 2480 496 2480 496 2720 64 2720 64 2672 176 2672 ecalcs.ecalcs#46.INPA
-w 792 2515 100 0 n#28 ecalcs.ecalcs#46.FLNK 464 2512 1120 2512 1120 2992 1144 2992 eecsmotor.eecsmotor#45.SLNK
-w 440 3507 100 0 n#29 eais.eais#47.FLNK 336 3504 544 3504 elongouts.elongouts#49.SLNK
-w 376 3475 100 0 n#30 eais.eais#47.VAL 336 3472 416 3472 416 3536 544 3536 elongouts.elongouts#49.DOL
-w 864 3475 100 0 n#31 elongouts.elongouts#49.OUT 800 3472 928 3472 928 3232 1144 3232 eecsmotor.eecsmotor#45.PDFB
-w 24 3523 100 0 n#32 inhier.PositionFeedback.P -32 3520 80 3520 eais.eais#47.INP
-w 784 2931 100 0 n#33 inhier.Fault.P 544 2928 1024 2928 1024 3120 1144 3120 eecsmotor.eecsmotor#45.FLT
-w 3280 3059 100 0 n#34 ecalcs.ecalcs#56.VAL 3216 3056 3344 3056 ebos.ebos#63.DOL
-w 3680 2995 100 0 n#35 ebos.ebos#63.OUT 3600 2992 3760 2992 outhier.NewPosition.p
-w 3232 3091 100 0 n#36 ecalcs.ecalcs#56.FLNK 3216 3088 3248 3088 3248 3024 3344 3024 ebos.ebos#63.SLNK
-w 3288 2467 100 0 n#37 ecalcs.ecalcs#59.VAL 3216 2464 3360 2464 ebos.ebos#64.DOL
-w 3219 2499 100 0 n#38 ecalcs.ecalcs#59.FLNK 3216 2496 3216 2496 3264 2496 3264 2432 3360 2432 ebos.ebos#64.SLNK
-w 3688 2403 100 0 n#39 ebos.ebos#64.OUT 3616 2400 3760 2400 outhier.DriveEnable.p
-w 3656 2469 100 0 n#40 ebos.ebos#64.FLNK 3616 2464 3696 2464 3696 2720 2816 2720 2816 2864 2928 2864 ecalcs.ecalcs#56.SLNK
-w 3680 3059 100 0 n#41 ebos.ebos#63.FLNK 3600 3056 3760 3056 outhier.Flink.p
-w 2938 3250 -100 0 n#42 ecalcs.ecalcs#56.INPA 2928 3248 1464 3248 eecsmotor.eecsmotor#45.HSTA
-w 2938 2658 -100 0 n#42 ecalcs.ecalcs#59.INPA 2928 2656 2768 2656 2768 3248 junction
-w 2106 3106 -100 0 n#43 eaos.eaos#10.FLNK 2096 3104 2736 3104 2736 2272 2928 2272 ecalcs.ecalcs#59.SLNK
+w 92 2291 100 0 n#25 inhier.Slink.P 8 2288 176 2288 ecalcs.ecalcs#46.SLNK
+w 480 2483 100 0 n#26 ecalcs.ecalcs#46.VAL 464 2480 496 2480 496 2720 64 2720 64 2672 176 2672 ecalcs.ecalcs#46.INPA
+w 792 2515 100 0 n#27 ecalcs.ecalcs#46.FLNK 464 2512 1120 2512 1120 2992 1144 2992 eecsmotor.eecsmotor#45.SLNK
+w 440 3507 100 0 n#28 eais.eais#47.FLNK 336 3504 544 3504 elongouts.elongouts#49.SLNK
+w 376 3475 100 0 n#29 eais.eais#47.VAL 336 3472 416 3472 416 3536 544 3536 elongouts.elongouts#49.DOL
+w 864 3475 100 0 n#30 elongouts.elongouts#49.OUT 800 3472 928 3472 928 3232 1144 3232 eecsmotor.eecsmotor#45.PDFB
+w 24 3523 100 0 n#31 inhier.PositionFeedback.P -32 3520 80 3520 eais.eais#47.INP
+w 784 2931 100 0 n#32 inhier.Fault.P 544 2928 1024 2928 1024 3120 1144 3120 eecsmotor.eecsmotor#45.FLT
+w 3280 3059 100 0 n#33 ecalcs.ecalcs#56.VAL 3216 3056 3344 3056 ebos.ebos#63.DOL
+w 3680 2995 100 0 n#34 ebos.ebos#63.OUT 3600 2992 3760 2992 outhier.NewPosition.p
+w 3232 3091 100 0 n#35 ecalcs.ecalcs#56.FLNK 3216 3088 3248 3088 3248 3024 3344 3024 ebos.ebos#63.SLNK
+w 3288 2467 100 0 n#36 ecalcs.ecalcs#59.VAL 3216 2464 3360 2464 ebos.ebos#64.DOL
+w 3688 2403 100 0 n#37 ebos.ebos#64.OUT 3616 2400 3760 2400 outhier.DriveEnable.p
+w 3680 3059 100 0 n#38 ebos.ebos#63.FLNK 3600 3056 3760 3056 outhier.Flink.p
+w 2938 3250 -100 0 n#39 ecalcs.ecalcs#56.INPA 2928 3248 1464 3248 eecsmotor.eecsmotor#45.HSTA
+w 2938 2658 -100 0 n#39 ecalcs.ecalcs#59.INPA 2928 2656 2768 2656 2768 3248 junction
+w 1482 3002 -100 0 n#40 eecsmotor.eecsmotor#45.FLNK 1464 2992 1504 2992 1504 2480 1008 2480 1008 2000 1168 2000 ecalcs.ecalcs#42.SLNK
+w 2106 3114 -100 0 n#41 eaos.eaos#10.FLNK 2096 3104 2720 3104 2720 2272 2928 2272 ecalcs.ecalcs#59.SLNK
+w 3626 2474 -100 0 n#42 ebos.ebos#64.FLNK 3616 2464 3664 2464 3664 2720 2800 2720 2800 2864 2928 2864 ecalcs.ecalcs#56.SLNK
+w 3226 2506 -100 0 n#43 ecalcs.ecalcs#59.FLNK 3216 2496 3264 2496 3264 2432 3360 2432 ebos.ebos#64.SLNK
 s 1196 3534 100 0 The macro motor was introduced to preserve the old motor names
 s 1196 3510 100 0 It could not be used as the root of the rest of the records because of name length constrains
 [cell use]
