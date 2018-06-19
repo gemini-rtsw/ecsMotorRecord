@@ -1,26 +1,26 @@
 menu(ecsMotorSIMM) {
-	choice(SIM_NONE,"NONE")
-	choice(SIM_VSM,"VSM")
-	choice(SIM_FAST,"FAST")
-	choice(SIM_FULL,"FULL")
+	choice(ecsMotorSIMM_NONE,"NONE")
+	choice(ecsMotorSIMM_VSM,"VSM")
+	choice(ecsMotorSIMM_FAST,"FAST")
+	choice(ecsMotorSIMM_FULL,"FULL")
 }
 menu(ecsMotorDBUG) {
-	choice(DBUG_NONE,"NONE")
-	choice(DBUG_MIN,"MIN")
-	choice(DBUG_FULL,"FULL")
-	choice(DBUG_MAX,"MAX")
+	choice(ecsMotorDBUG_NONE,"NONE")
+	choice(ecsMotorDBUG_MIN,"MIN")
+	choice(ecsMotorDBUG_FULL,"FULL")
+	choice(ecsMotorDBUG_MAX,"MAX")
 }
 menu(ecsMotorMODE) {
-	choice(MODE_STOP,"STOP")
-	choice(MODE_PARK,"PARK")
-	choice(MODE_MOVE,"MOVE")
-	choice(MODE_RESET,"RESET")
-	choice(MODE_PAUSE,"PAUSE")
-	choice(MODE_RESUME,"RESUME")
-	choice(MODE_VMOVE,"VMOVE")
+	choice(ecsMotorMODE_STOP,"STOP")
+	choice(ecsMotorMODE_PARK,"PARK")
+	choice(ecsMotorMODE_MOVE,"MOVE")
+	choice(ecsMotorMODE_RESET,"RESET")
+	choice(ecsMotorMODE_PAUSE,"PAUSE")
+	choice(ecsMotorMODE_RESUME,"RESUME")
+	choice(ecsMotorMODE_VMOVE,"VMOVE")
 }
 recordtype(ecsMotor) {
-	include "dbCommon.dbd"
+	include "dbCommon.dbd" 
         field(VAL,DBF_DOUBLE) {
 		prompt("User Position Value")
 		asl(ASL1)
@@ -152,6 +152,13 @@ recordtype(ecsMotor) {
 		interest(0)
 		base(DECIMAL)
 	}
+        field(PDFB,DBF_LONG) {
+		prompt("Position demand feedback")
+		asl(ASL1)
+		pp(NO)
+		interest(0)
+		base(DECIMAL)
+	}
         field(RRBV,DBF_LONG) {
 		prompt("Raw positon readback")
 		asl(ASL1)
@@ -198,6 +205,13 @@ recordtype(ecsMotor) {
 		asl(ASL1)
 		pp(NO)
 		interest(1)
+		base(DECIMAL)
+	}
+        field(HINP,DBF_LONG) {
+		prompt("Handshake Input")
+		asl(ASL1)
+		pp(NO)
+		interest(0)
 		base(DECIMAL)
 	}
         field(HSTA,DBF_LONG) {
