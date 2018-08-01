@@ -401,3 +401,6 @@ recordtype(ecsMotor) {
 		menu(menuAlarmSevr)
 	}
 }
+variable(var01,int)
+variable(var02,int)
+variable(var03,int)

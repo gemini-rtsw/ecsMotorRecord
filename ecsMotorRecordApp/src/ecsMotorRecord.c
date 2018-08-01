@@ -48,6 +48,8 @@
 #include <ellLib.h>
 #include <epicsMutex.h>
 #include <epicsExport.h>
+#include <iocsh.h>
+
 #include <postfix.h>
 
 #include <menuCarstates.h>
@@ -128,6 +130,10 @@ static long            get_precision(struct dbAddr * paddr, long *precision);
 static long            get_graphic_double(struct dbAddr * paddr, struct dbr_grDouble * pgd);
 static long            get_control_double(struct dbAddr * p, struct dbr_ctrlDouble * pcd);
 static long            get_alarm_double(struct dbAddr * paddr, struct dbr_alDouble * pad);
+
+static int var01 = 5;
+static int var02 = 5;
+static int var03 = 5;
 
 /* record support entry table */
 rset     ecsMotorRSET = {
@@ -222,6 +228,7 @@ static long failingState (struct ecsMotorRecord *);
 
 static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
 static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern);
+static void updateInputBits (struct ecsMotorRecord *pmr);
 static double positionFromEncoder(struct ecsMotorRecord *pmr);
 
 inline char *timeStamp() {
@@ -315,7 +322,7 @@ static void ecsMotorRecordScanTask(void *p) {
 	    if (inPosition != pPriv->inPosition) {
 		pPriv->inPosition = inPosition;
 	    }
-	    setHandshakeBits(pmr, pmr->hinp);
+	    updateInputBits(pmr);
 	    pPriv->callbackFlags |= DATA_READ;
 	    MARK(M_HINP);
 	}
@@ -552,6 +559,7 @@ static long processModeChange (struct ecsMotorRecord *pmr) {
  * Function setHandshakeBits
  * 
  * Set one or more bits in the output handshake.
+ * This routine is intended to be called from the state machine functions.
  *
  */
 static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
@@ -561,20 +569,21 @@ static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
     input_mask = INPUT_MASK(pmr->vms);
     output_mask = OUTPUT_MASK(pmr->vms);
 
-    //printf ("\ns1: im=0x%x om=0x%x\n", input_mask, output_mask);
-    //printf ("s2: hi=0x%x, ho=0x%x, p=0x%x\n", pmr->hinp, pmr->hsta, pattern);
+    printf ("\n %s setHandshakeBits1: im=0x%lx om=0x%lx\n", pmr->name, input_mask, output_mask);
+    printf ("setHandshakeBits2: hi=0x%x, ho=0x%x, p=0x%x\n", pmr->hinp, pmr->hsta, pattern);
 
     pmr->hsta = (pmr->hinp & input_mask) | ((pmr->hsta | pattern) & output_mask);
     pmr->pp = TRUE;
     MARK(M_HSTA);
 
-    //printf ("setHandshakeBits: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
+    printf ("setHandshakeBits3: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
 }
 
 /*
  * Function resetHandshakeBits
  * 
  * Reset (clear) one or more bits in the output handshake.
+ * This routine is intended to be called from the state machine functions.
  *
  */
 static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
@@ -584,112 +593,41 @@ static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern
     input_mask = INPUT_MASK(pmr->vms);
     output_mask = OUTPUT_MASK(pmr->vms);
 
-    //printf ("\nr1: im=0x%x om=0x%x\n", input_mask, output_mask);
-    //printf ("r2: hi=0x%x, ho=0x%x, p=0x%x\n", pmr->hinp, pmr->hsta, pattern);
-    //pmr->hsta = pmr->hinp & (~pattern | input_mask);
+    printf ("\n %s resetHandshakeBits1: im=0x%lx om=0x%lx\n", pmr->name, input_mask, output_mask);
+    printf ("resetHandshakeBits2: hi=0x%x, ho=0x%x, p=0x%x\n", pmr->hinp, pmr->hsta, pattern);
     
     pmr->hsta = (pmr->hinp & input_mask) | ((pmr->hsta & ~pattern) & output_mask);
     pmr->pp = TRUE;
     MARK(M_HSTA);
 
-    //printf ("resetHandshakeBits: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
-    //printf ("r: p=0x%x, im=0x%x, om=%x, hi=0x%x, ho=0x%x\n", pattern, input_mask, output_mask, pmr->hinp, pmr->hsta);
+    printf ("resetHandshakeBits3: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
 }
 
-#if 0
 /*
- * Function setHandshakeBits
+ * Function updateInputBits
  * 
- * Set one or more bits in the output handshake.
+ * Update changes in the handshake input bits into the handshake output.
+ * This routine is intended to be called from the scan task when a change in one
+ * of the input handshake bits (HINP) is detected and needs to be propagated to
+ * the output handshake (HSTA) to keep both words syncronized.
  *
  */
-static void setHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
+static void updateInputBits (struct ecsMotorRecord *pmr)
 {
-    unsigned int mask;
-    ecsMotorRecordPriv *pPriv = pmr->dpvt;
+    long input_mask, output_mask;
 
-    Debug(DBUG_FULL, "<%s> %s:setHandshakeBits pattern=0x%x\n", pattern);
+    input_mask = INPUT_MASK(pmr->vms);
+    output_mask = OUTPUT_MASK(pmr->vms);
 
-    //mask = INPUT_BITS(pmr->vms);
-    if (pmr->vms)
-	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT | VEL_ACK_BIT);
-    else
-	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT);
+    printf ("\n %s updateHandShakeBits1: im=0x%lx om=0x%lx\n", pmr->name, input_mask, output_mask);
+    printf ("updateHandShakeBits2: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
 
-    pPriv->pattern |= pattern;
-
-    pmr->hsta = pmr->hinp | (pattern & ~mask);
+    pmr->hsta = (pmr->hinp & input_mask) | (pmr->hsta & output_mask);
     pmr->pp = TRUE;
     MARK(M_HSTA);
 
-    Debug(DBUG_FULL, "<%s> %s:setHandshakeBits hsta=0x%x\n", pmr->hsta);
-    printf ("setHandShakeBits, hinp=%x, hsta=%x, pat=%x\n", pmr->hinp, pmr->hsta, pattern);
+    printf ("updateHandShakeBits3: hi=0x%x, ho=0x%x\n", pmr->hinp, pmr->hsta);
 }
-
-/*
- * Function resetHandshakeBits
- * 
- * Reset (clear) one or more bits in the output handshake.
- *
- */
-static void resetHandshakeBits (struct ecsMotorRecord *pmr, unsigned int pattern)
-{
-    unsigned int mask;
-
-    Debug(DBUG_FULL, "<%s> %s:resetHandshakeBits pattern=0x%x\n", pattern);
-
-    if (pmr->vms)
-	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT | VEL_ACK_BIT);
-    else
-	mask = (PWR_ACK_BIT | DRV_ACK_BIT | POS_ACK_BIT | IN_POS_BIT);
-
-    pmr->hsta = pmr->hinp & (~pattern | mask);
-    pmr->pp = TRUE;
-    MARK(M_HSTA);
-
-    Debug(DBUG_FULL, "<%s> %s:resetHandshakeBits hsta=0x%x\n", pmr->hsta);
-    printf ("resetHandShakeBits, hinp=%x, hsta=%x, pat=%x\n", pmr->hinp, pmr->hsta, pattern);
-}
-#endif
-
-#if 0
-/*
- * Function writeHandshake
- * 
- * Write a new handshake pattern to the AB PLC.
- *
- * Replaced by setHandShakeBits and resetHandShakeBits
- *
- */
-static long writeHandshake (struct ecsMotorRecord *pmr, unsigned pattern) {
-   //ecsMotorRecordPriv *pPriv = pmr->dpvt;
-   long status = S_ECS_OK;
-   unsigned int mask;
-
-   Debug(DBUG_FULL, "<%s> %s:handshake word write 0x%x\n", pattern);
-
-   if (pmr->dmov)
-       pattern |= IN_POS_BIT;
-
-    /* Change this to a dbPutLink (mdw) */
-    // status = drvAbDf1WriteAnalog (pPriv->pWriteHskPriv, pattern);
-    // pmr->hsta = pattern; /* for now, we'll just set HSTA to the requested pattern (mdw) */
-
-   /* The mask is used to prevent the ecsMotor record from overwting bits that are
-    * set by the PLC. It doesn't matter when using the software with the real PLC,
-    * but it's a problem with the simulator, and it's wrong anyway (PGX).
-    */
-   mask = (pmr->hsta & PWR_BIT)     | (pmr->hsta & PWR_ACK_BIT) |
-          (pmr->hsta & POS_ACK_BIT) | (pmr->hsta & DRV_ACK_BIT);
-
-   pmr->hsta = pattern | mask;
-   Debug(DBUG_FULL, "<%s> %s:handshake written 0x%x\n", pmr->hsta);
-   pmr->pp = TRUE;
-   MARK(M_HSTA);
-
-   return (status);
-}
-#endif
 
 /*
  * Function checkFaultState
@@ -955,7 +893,7 @@ writingState (struct ecsMotorRecord *pmr) {
     /* Value has been written, set the validation bit */
     //writeHandshake (pmr, pmr->hsta | ((pmr->mode == MODE_VMOVE) ? NEW_VEL_BIT : NEW_POS_BIT));
     setHandshakeBits (pmr, NEW_POS_BIT);
-    setTimeout (pmr, ECS_WRITE_TMO);
+    setTimeout (pmr, ECS_PVOK_TMO);
 
     /* and proceed to the validation state */
      status = verifyingState (pmr);
@@ -1020,7 +958,7 @@ startingState (struct ecsMotorRecord *pmr) {
     long status = S_ECS_OK;
 
     Debug(DBUG_FULL, "<%s> %s:startingState%c\n", ' ');
-    //printf ("startingState, hinp=%x\n", pmr->hinp);
+    printf ("startingState, hinp=%x\n", pmr->hinp);
 
     /* Clear the new position bit. This is necessary because the new driver
      * keeps updating this bit and competing with the PLC.
@@ -1037,9 +975,9 @@ startingState (struct ecsMotorRecord *pmr) {
         }
 
         //writeHandshake (pmr, DRV_BIT | (pmr->hsta & DRV_ACK_BIT));
-	//printf ("%s: startingState, setting drive enable\n", timeStamp());
+	printf ("%s: startingState, setting drive enable\n", timeStamp());
         setHandshakeBits (pmr, DRV_BIT);
-        setTimeout (pmr, ECS_PVOK_TMO);
+        setTimeout (pmr, ECS_START_TMO);
         return (S_ECS_OK);
     }
 
@@ -2465,6 +2403,11 @@ readInputLinks (struct ecsMotorRecord * pmr) {
 
    return status;
 }
+
+epicsExportAddress(int, var01);
+epicsExportAddress(int, var02);
+epicsExportAddress(int, var03);
+
 
 /*********************************************************************
 

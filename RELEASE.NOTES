@@ -14,3 +14,28 @@ March 27th, 2018 tgagg
   faster compilation times.
 
 ----
+
+August 1st, 2018 pgx/tgagg
+
+1. Debugging vars ready for use when needed:
+M       ecsMotorRecordApp/src/ecsMotorRecord.dbd
+
+2. Timeouts adjusted: 
+M       ecsMotorRecordApp/src/ecsMotorRecordDefs.h
+
+3. Updated the bit combining routines:
+M       ecsMotorRecordApp/src/ecsMotorRecord.c
+  - Under ecsMotorRecordScanTask setHandshakeBits(pmr, pmr->hinp); was replaced
+  with new routine: updateInputBits(pmr);
+  - Some printfs are cleaned and enabled to allow greater diagnostics if needed
+   during the first operation runs.
+  - updateInputBits: Update changes in the handshake input bits into the 
+  handshake output. With this corrections we do not relay anymore on occasional 
+  delays on the PLC side with updating the bits status.
+  - writingState: Correct wrong timeout name.
+  
+4. Added a new engineering routine to test bit combining functions.
+A         ecsMotorRecordApp/src/testHs.c
+
+
+----
