@@ -24,19 +24,16 @@ recordtype(ecsMotor) {
         field(VAL,DBF_DOUBLE) {
 		prompt("User Position Value")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 	}
         field(VELO,DBF_FLOAT) {
 		prompt("Velocity (EGU/s)")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(MODE,DBF_MENU) {
 		prompt("Operating Mode")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		menu(ecsMotorMODE)
 		initial("STOP")
@@ -44,27 +41,25 @@ recordtype(ecsMotor) {
         field(MDBD,DBF_FLOAT) {
 		prompt("Motion Deadband")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(FLT,DBF_LONG) {
 		prompt("Fault")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(1)
 		base(DECIMAL)
 	}
         field(STOP,DBF_SHORT) {
 		prompt("Stop")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(1)
 		base(DECIMAL)
 	}
         field(SIMM,DBF_MENU) {
 		prompt("Simulation Mode")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		menu(ecsMotorSIMM)
 		initial("NONE")
@@ -72,7 +67,6 @@ recordtype(ecsMotor) {
         field(DBUG,DBF_MENU) {
 		prompt("Debug Mode")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		menu(ecsMotorDBUG)
 		initial("NONE")
@@ -80,33 +74,28 @@ recordtype(ecsMotor) {
         field(PSCA,DBF_FLOAT) {
 		prompt("Position Scale Factor")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(VSCA,DBF_FLOAT) {
 		prompt("Velocity Scale Factor")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(OUT,DBF_OUTLINK) {
 		prompt("Output Specification")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(DOL,DBF_INLINK) {
 		prompt("Desired Output Loc")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(OMSL,DBF_MENU) {
 		prompt("Output Mode Select")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		menu(menuOmsl)
 	}
@@ -114,165 +103,141 @@ recordtype(ecsMotor) {
 		prompt("Device State Link")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(MSGL,DBF_OUTLINK) {
 		prompt("Error Message Link")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(SIML,DBF_INLINK) {
 		prompt("Simulation Mode Link")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(DBGL,DBF_INLINK) {
 		prompt("Debug Mode Link")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(RPOS,DBF_LONG) {
 		prompt("Raw positon command")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(RVEL,DBF_LONG) {
 		prompt("Raw velocity command")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(PDFB,DBF_LONG) {
 		prompt("Position demand feedback")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(RRBV,DBF_LONG) {
 		prompt("Raw positon readback")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(DSTA,DBF_LONG) {
 		prompt("Device Action State")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(DMOV,DBF_LONG) {
 		prompt("Done moving to value")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(MPOS,DBF_DOUBLE) {
 		prompt("Motor Position")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 	}
         field(MIP,DBF_LONG) {
 		prompt("Motion In Progress")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(MOVN,DBF_LONG) {
 		prompt("Motor is moving")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(MSTA,DBF_LONG) {
 		prompt("Motor Status")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		base(DECIMAL)
 	}
         field(HINP,DBF_LONG) {
 		prompt("Handshake Input")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(HSTA,DBF_LONG) {
 		prompt("Handshake Status")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(MESS,DBF_STRING) {
 		prompt("Error Message")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		size(40)
 	}
         field(PREC,DBF_SHORT) {
 		prompt("Display Precision")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		base(DECIMAL)
 	}
         field(EGU,DBF_STRING) {
 		prompt("Engineering Units")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		size(16)
 	}
         field(VERS,DBF_FLOAT) {
 		prompt("Code Version")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 	}
         field(ALST,DBF_DOUBLE) {
 		prompt("Last Value Archived")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(3)
 	}
         field(MLST,DBF_DOUBLE) {
 		prompt("Last Value Monitored")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(3)
 	}
         field(PP,DBF_SHORT) {
 		prompt("Post process command")
 		asl(ASL1)
-		pp(NO)
 		interest(2)
 		base(DECIMAL)
 	}
         field(MMAP,DBF_ULONG) {
 		prompt("Monitor Mask")
 		asl(ASL1)
-		pp(NO)
 		interest(3)
 		base(DECIMAL)
 	}
@@ -280,123 +245,115 @@ recordtype(ecsMotor) {
 		prompt("Velocity Mode Support")
 		special(SPC_NOMOD)
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 		base(DECIMAL)
 	}
         field(LLS,DBF_SHORT) {
 		prompt("Low Limit Switch")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(HLS,DBF_SHORT) {
 		prompt("High Limit Switch")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(HLM,DBF_FLOAT) {
 		prompt("User High Limit")
 		asl(ASL1)
-		pp(YES)
 		interest(0)
 	}
         field(LLM,DBF_FLOAT) {
 		prompt("User Low Limit")
 		asl(ASL1)
-		pp(YES)
 		interest(0)
 	}
         field(HOPR,DBF_FLOAT) {
 		prompt("High Operating Range")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(1)
 	}
         field(LOPR,DBF_FLOAT) {
 		prompt("Low Operating Range")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(1)
 	}
         field(LVIO,DBF_SHORT) {
 		prompt("Limit Violation")
 		asl(ASL1)
-		pp(NO)
 		interest(0)
 		base(DECIMAL)
 	}
         field(MDEL,DBF_FLOAT) {
 		prompt("Monitor Deadband")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(ADEL,DBF_FLOAT) {
 		prompt("Archive Deadband")
 		asl(ASL1)
-		pp(NO)
 		interest(1)
 	}
         field(HIHI,DBF_FLOAT) {
 		prompt("Hihi Alarm Limit")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 	}
         field(LOLO,DBF_FLOAT) {
 		prompt("Lolo Alarm Limit")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 	}
         field(HIGH,DBF_FLOAT) {
 		prompt("High Alarm Limit")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 	}
         field(LOW,DBF_FLOAT) {
 		prompt("Low Alarm Limit")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 	}
         field(HHSV,DBF_MENU) {
 		prompt("Hihi Severity")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 		menu(menuAlarmSevr)
 	}
         field(LLSV,DBF_MENU) {
 		prompt("Lolo Severity")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 		menu(menuAlarmSevr)
 	}
         field(HSV,DBF_MENU) {
 		prompt("High Severity")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 		menu(menuAlarmSevr)
 	}
         field(LSV,DBF_MENU) {
 		prompt("Low Severity")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 		menu(menuAlarmSevr)
 	}
         field(HLSV,DBF_MENU) {
 		prompt("HW Limit Violation Svr")
 		asl(ASL1)
-		pp(YES)
+		pp(TRUE)
 		interest(2)
 		menu(menuAlarmSevr)
 	}

@@ -118,7 +118,6 @@ static long	auxiliary_process(struct ecsMotorRecord *pmr, long processType);
 static long            init_record(struct ecsMotorRecord * pmr, int pass);
 static long            process(struct ecsMotorRecord * pmr);
 static long            special(struct dbAddr * paddr, int after);
-static long            get_value(struct ecsMotorRecord * pmr, struct valueDes * pvdes);
 #define cvt_dbaddr     NULL
 #define get_array_info NULL
 #define put_array_info NULL
@@ -143,7 +142,7 @@ rset     ecsMotorRSET = {
    init_record,
    process,
    special,
-   get_value,
+   NULL,
    cvt_dbaddr,
    get_array_info,
    put_array_info,
@@ -1941,17 +1940,7 @@ static long special(struct dbAddr *paddr, int after) {
    return (0);
 }
 
-/******************************************************************************
-   get_value()
-*******************************************************************************/
-static long get_value(struct ecsMotorRecord * pmr, struct valueDes * pvdes)
-{
-   Debug(DBUG_MAX, "<%s> %s:get_value: entry%c\n", ' ');
-   pvdes->field_type = DBF_DOUBLE;
-   pvdes->no_elements = 1;
-   pvdes->pvalue = &pmr->val;
-   return (0);
-}
+
 
 /******************************************************************************
    get_units()
