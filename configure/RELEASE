@@ -29,7 +29,7 @@ PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # Depends on geminiRec for the CAR definitions
-GEMREC=$(PROD_SUPP)/geminiRec/4-1-12
+GEMREC=$(PROD_SUPP)/geminiRec/4-1-11-R315
 
 # EPICS_BASE should appear last so earlier modules can override stuff:
 EPICS_BASE = /gem_sw/epics/$(EPICS_RELEASE)/base
