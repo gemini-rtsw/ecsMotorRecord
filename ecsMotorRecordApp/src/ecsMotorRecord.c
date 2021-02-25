@@ -878,12 +878,14 @@ writingState (struct ecsMotorRecord *pmr) {
 	    MARK(M_RPOS);
         }
         setTimeout (pmr, ECS_WRITE_TMO);
+        printf ("%s: writingState, timeout set ECS_WRITE_TMO\n", timeStamp());
         return status;
     }
 
     /* If the timeout has expired register a fault */
     if (MARKED(M_TIMEOUT)) {
         status = recordError (pmr, "Vel/Pos write failure", S_ECS_TIMEOUT);
+        printf ("%s: writingState, timeout!!!\n", timeStamp());
         return status;
     }
 
@@ -894,6 +896,7 @@ writingState (struct ecsMotorRecord *pmr) {
     //writeHandshake (pmr, pmr->hsta | ((pmr->mode == MODE_VMOVE) ? NEW_VEL_BIT : NEW_POS_BIT));
     setHandshakeBits (pmr, NEW_POS_BIT);
     setTimeout (pmr, ECS_PVOK_TMO);
+    printf ("%s: writingState, timeout set ECS_PVOK_TMO\n", timeStamp());
 
     /* and proceed to the validation state */
      status = verifyingState (pmr);
