@@ -46,7 +46,7 @@ $(COMMON_DIR)/%.db: %.db
 
 
 
-clean::myclean
+clean:
 myclean:
 	$(RM) *.dat *.bak 
 
