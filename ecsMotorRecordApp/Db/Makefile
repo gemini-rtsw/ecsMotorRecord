@@ -24,7 +24,7 @@ vpath %.db $(SYS_DB_PATHS)
 
 
 TEMPLATES_DIR = schematics
-TEMPLATES += ecsMotorControl.sch ecsMotorControl.sym
+TEMPLATES += ecsMotorControl.sch ecsMotorControl.sym eecsmotor.sym
 
 
 
