@@ -24,15 +24,14 @@
 
 # Variables and paths to dependent modules:
 
-PROD_SUPP=/gem_base/epics/support
-WORK_SUPP=/gem_base/epics/support
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 # Depends on geminiRec for the CAR definitions
-GEMREC=$(PROD_SUPP)/geminiRec
+GEMREC=$(SUPPORT)/geminiRec
 
-# EPICS_BASE should appear last so earlier modules can override stuff:
-EPICS_BASE = /gem_base/epics/epics-base
+# EPICS_BASE usually appears last so other apps can override stuff:
+SUPPORT=/gem_base/epics/support
+EPICS_BASE=/gem_base/epics/epics-base
 
 # Set RULES here if you want to use build rules from somewhere
 # other than EPICS_BASE:

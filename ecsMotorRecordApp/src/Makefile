@@ -14,7 +14,7 @@ DBD += ecsMotorRecordApp.dbd   # Needed for TDCT
 ecsMotorRecordApp_DBD += base.dbd
 ecsMotorRecordApp_DBD += ecsMotorRecord.dbd
 
-LIBRARY_IOC += ecsMotorRecord
+LIBRARY += ecsMotorRecord
 
 # specify all source files to be compiled
 # including sequencer (.st) source files
