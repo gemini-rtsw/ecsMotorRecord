@@ -26,8 +26,9 @@ Source0: %{name}-%{version}.tar.gz
 ExclusiveArch: %{arch}
 Prefix: %{_prefix}
 ## You may specify dependencies here
-BuildRequires: epics-base-devel geminiRec-devel
-Requires: epics-base geminiRec 
+## epics-base-devel pinned exactly; geminiRec-devel is a support build dep.
+BuildRequires: epics-base-devel = 7.0.7-0.git.16f5056.el8 geminiRec-devel
+## (runtime Requires removed: cross-compiled VME/build-only artifact, never runs on host)
 ## Switch dependency checking off
 # AutoReqProv: no
 
